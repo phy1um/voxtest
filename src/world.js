@@ -1,4 +1,4 @@
-import {Chunk, CHUNK_DIM} from "./game.js";
+import {Chunk, CHUNK_DIM} from "./chunk.js";
 import {basicPopulate} from "./gen.js";
 import * as THREE from "../build/three.module.js";
 

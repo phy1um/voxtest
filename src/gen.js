@@ -1,5 +1,5 @@
 
-import {CHUNK_DIM} from "./game.js";
+import {CHUNK_DIM} from "./chunk.js";
 import {Perlin} from "./noise.js";
 
 const p = new Perlin(48, 48, 1);
