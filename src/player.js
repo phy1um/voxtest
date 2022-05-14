@@ -4,8 +4,14 @@ import {World} from "./world.js";
 const PSPEED = 8.2;
 const PACC = 3.2;
 const PGRAV = 0.98;
-const PVMAX = 12;
+const PVMAX = -12;
 const FOOTOFFSET = -0.6;
+
+const MSCALE_X = -0.001;
+const MSCALE_Y = 0.001;
+
+const AXIS_Y = new THREE.Vector3(0,1,0);
+const AXIS_X = new THREE.Vector3(1,0,0);
 
 function boxFree(v) {
   return World.pointFree(v.x - 0.5, v.y, v.z - 0.5)
@@ -18,7 +24,8 @@ export class Player {
   constructor(x, y, z) {
     this.pos = new THREE.Vector3(x, y, z);
     this.fwd = new THREE.Vector3(0,0,1);
-    this.rot = new THREE.Euler(0, 0, 0);
+    this.rotX = 0;
+    this.rotY = 0;
     this.camera = new THREE.PerspectiveCamera(75, 2, 0.1, 1000);
     this.velocity = new THREE.Vector3(0,0,0);
     this.vspeed = 0;
@@ -38,7 +45,8 @@ export class Player {
      
     const fwd = new THREE.Vector3();
     fwd.copy(this.fwd);
-    fwd.applyEuler(this.rot);
+    fwd.applyAxisAngle(AXIS_X, this.rotX);
+    fwd.applyAxisAngle(AXIS_Y, this.rotY);
     fwd.add(this.pos);
     this.camera.lookAt(fwd);
   }
@@ -47,20 +55,22 @@ export class Player {
 
     const wishdir = new THREE.Vector3();
 
-    if (this.keys["s"]) {
+    if (this.keys["w"]) {
       wishdir.z = 1;
     } 
-    if (this.keys["w"]) {
+    if (this.keys["s"]) {
       wishdir.z -= 1; 
     }
-    if (this.keys["d"]) {
+    if (this.keys["a"]) {
       wishdir.x = 1;
     }
-    if (this.keys["a"]) {
+    if (this.keys["d"]) {
       wishdir.x -= 1;
     }
 
     wishdir.normalize();
+    wishdir.applyAxisAngle(AXIS_Y, this.rotY);
+
     if (wishdir.length() > 0.2) {
       wishdir.multiplyScalar(PACC);
       this.velocity.add(wishdir);
@@ -81,13 +91,13 @@ export class Player {
       }
       if (this.keys[" "]) {
         this.grounded = false;
-        this.vspeed = -20;
+        this.vspeed = 20;
         this.floatTime = 0.09;
         console.log("jump!");
         this.keys[" "] = false;
       }
     } else if (this.floatTime <= 0) {
-      this.vspeed = Math.min(this.vspeed + PGRAV, PVMAX);
+      this.vspeed = Math.max(this.vspeed - PGRAV, PVMAX);
     }
 
     const fv = new THREE.Vector3();
@@ -117,12 +127,25 @@ export class Player {
 
     this.updateCamera();
 
-    this.floatTime += dt;
+    this.floatTime -= dt;
   }
 
   keyevent(k, b) {
     this.keys[k] = b; 
   }
 
+  mouse(dx, dy) {
+    this.rotY = (this.rotY + dx*MSCALE_X) % 6.3; 
+    this.rotX = clampf(this.rotX + dy*MSCALE_Y, -1.4, 1.4);
+  }
   
+}
+
+function clampf(v, mi, ma) {
+  if (v < mi) {
+    return mi;
+  } else if (v > ma) {
+    return ma;
+  }
+  return v;
 }

@@ -35,6 +35,17 @@ document.addEventListener("keyup", (e) => {
   player.keyevent(e.key, false);
 });
 
+let mouseLastX = -1;
+let mouseLastY = -1;
+document.addEventListener("mousemove", (e) => {
+  player.mouse(e.movementX, e.movementY);
+});
+
+canvas.addEventListener("pointerdown", (e) => {
+  console.log("click!");
+  canvas.requestPointerLock();
+}, "true");
+
 
 
 const camera = new THREE.PerspectiveCamera(75, 2, 0.1, 1000);
@@ -50,7 +61,7 @@ for (let i = 0; i < 3; i++) {
 let lastTime = 0;
 const cspeed = -8.2;
 function render(time) {
-  const dt = (lastTime - time) * 0.001;
+  const dt = (time - lastTime) * 0.001;
   lastTime = time;
 
   player.update(dt);

@@ -11,9 +11,12 @@ class world {
     this.chunks = {};
     this.scene = new THREE.Scene();
 
-    const light = new THREE.DirectionalLight(0xffffff, 0.4);
-    light.position.set(1, 2, 3);
-    this.scene.add(light);
+    this.ambient = new THREE.AmbientLight(0x404040);
+    this.sun = new THREE.DirectionalLight(0xd0d0d0, 0.4);
+    this.sun.position.set(1, 10, 1.4);
+
+    this.scene.add(this.ambient);
+    this.scene.add(this.sun);
 
   }
 
