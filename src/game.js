@@ -70,7 +70,7 @@ export class Chunk {
   }
 
     const geo = new THREE.BufferGeometry();
-    const col = getcol(0x70 + Math.random()*0x20, 0x70 + Math.random()*0x20, 0x70 + Math.random()*0x20);
+    const col = getcol(0xc0 + Math.random()*0x20, 0xc0 + Math.random()*0x20, 0xc0 + Math.random()*0x20);
     const mat = new THREE.MeshLambertMaterial({color: col}); 
     geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));
     geo.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(normals), 3));
