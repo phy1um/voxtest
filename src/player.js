@@ -4,7 +4,15 @@ import {World} from "./world.js";
 const PSPEED = 8.2;
 const PACC = 3.2;
 const PGRAV = 0.98;
-const PVMAX = 8;
+const PVMAX = 12;
+const FOOTOFFSET = -0.6;
+
+function boxFree(v) {
+  return World.pointFree(v.x - 0.5, v.y, v.z - 0.5)
+    && World.pointFree(v.x + 0.5, v.y, v.z - 0.5)
+    && World.pointFree(v.x - 0.5, v.y, v.z + 0.5)
+    && World.pointFree(v.x + 0.5, v.y, v.z + 0.5);
+}
 
 export class Player {
   constructor(x, y, z) {
@@ -14,6 +22,7 @@ export class Player {
     this.camera = new THREE.PerspectiveCamera(75, 2, 0.1, 1000);
     this.velocity = new THREE.Vector3(0,0,0);
     this.vspeed = 0;
+    this.floatTime = 0;
     this.keys = {};
     this.updateCamera();
   }
@@ -66,11 +75,18 @@ export class Player {
       this.vspeed = 0;
       const foot = new THREE.Vector3();
       foot.copy(this.pos);
-      foot.y -= 1.3;
+      foot.y += FOOTOFFSET;
       if (World.pointFree(foot.x, foot.y, foot.z)) {
         this.grounded = false;
       }
-    } else {
+      if (this.keys[" "]) {
+        this.grounded = false;
+        this.vspeed = -20;
+        this.floatTime = 0.09;
+        console.log("jump!");
+        this.keys[" "] = false;
+      }
+    } else if (this.floatTime <= 0) {
       this.vspeed = Math.min(this.vspeed + PGRAV, PVMAX);
     }
 
@@ -82,7 +98,7 @@ export class Player {
     nextPos.copy(this.pos);
     nextPos.add(fv);
 
-    if (World.pointFree(nextPos.x, nextPos.y, nextPos.z)) {
+    if (boxFree(nextPos)) {
       this.pos.copy(nextPos);
     } else {
       this.velocity.x = 0;
@@ -92,15 +108,16 @@ export class Player {
     nextPos.copy(this.pos); 
     nextPos.y += this.vspeed*dt;
 
-    if (World.pointFree(nextPos.x, nextPos.y - 1.3, nextPos.z)) {
+    if (World.pointFree(nextPos.x, nextPos.y + FOOTOFFSET, nextPos.z)) {
       this.pos.copy(nextPos);
     } else {
       this.vspeed = 0;
       this.grounded = true;
     }
 
-
     this.updateCamera();
+
+    this.floatTime += dt;
   }
 
   keyevent(k, b) {
