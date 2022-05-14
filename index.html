@@ -12,6 +12,9 @@
     <div id="content">
       <canvas id="c" width=1280 height=720></canvas>
     </div> 
+    <div id="hud">
+      <h2 id="time">0</h2>
+    </div>
 
     <script type="module">
 
@@ -60,12 +63,16 @@ for (let i = 0; i < 3; i++) {
 
 let lastTime = 0;
 const cspeed = -8.2;
+const hudTime = document.querySelector("#time");
 function render(time) {
   const dt = (time - lastTime) * 0.001;
   lastTime = time;
 
   player.update(dt);
+  World.update(dt);
   renderer.render(World.scene, camera);
+
+  hudTime.innerText = World.time.toString()
 
   requestAnimationFrame(render);
 }
