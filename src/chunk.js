@@ -8,6 +8,18 @@ const CHUNK_SIZE_X = 32;
 const CHUNK_SIZE_Y = 32;
 const CHUNK_SIZE_Z = 32;
 
+const voxelTextures = new THREE.TextureLoader().load("./img/tiles.png")
+
+function texU(cp, i) {
+  i += cp[0];
+  return (i%16)/256;
+}
+
+function texV(cp, i) {
+  i += cp[1];
+  return Math.floor(i/16)/256;
+}
+
 function getcol(r, g, b) {
   return `#${(r&0xff).toString(16)}${(g&0xff).toString(16)}${(b&0xff).toString(16)}`
 }
@@ -32,6 +44,7 @@ export class Chunk {
     const positions = [];
     const normals = [];
     const indices = [];
+    const uvs = [];
     const startX = 0;
     const startY = 0;
     const startZ = 0;
@@ -56,6 +69,7 @@ export class Chunk {
                 for (const pos of corners) {
                   positions.push(pos[0] + x, pos[1] + y, pos[2] + z);
                   normals.push(...dir);
+                  uvs.push(texU(pos, voxel), texV(pos, voxel));
                 }
                 indices.push(
                   ndx, ndx + 1, ndx + 2,
@@ -71,9 +85,10 @@ export class Chunk {
 
     const geo = new THREE.BufferGeometry();
     const col = getcol(0xc0 + Math.random()*0x20, 0xc0 + Math.random()*0x20, 0xc0 + Math.random()*0x20);
-    const mat = new THREE.MeshLambertMaterial({color: col}); 
+    const mat = new THREE.MeshLambertMaterial({color: col, map: voxelTextures}); 
     geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));
     geo.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(normals), 3));
+    geo.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(uvs), 2));
     geo.setIndex(indices);
     this.mesh = new THREE.Mesh(geo, mat);
     this.mesh.position.set(this.wx*CHUNK_DIM, 0, this.wy*CHUNK_DIM);
