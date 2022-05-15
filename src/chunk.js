@@ -9,22 +9,28 @@ const CHUNK_SIZE_Y = 32;
 const CHUNK_SIZE_Z = 32;
 
 const voxelTextures = new THREE.TextureLoader().load("./img/tiles.png")
+voxelTextures.magFilter = THREE.NearestFilter;
+voxelTextures.minFilter = THREE.NearestFilter;
 
-function texU(cp, i) {
-  i += cp[0];
-  return (i%16)/256;
+const texTileSize = 16;
+const texRows = 16;
+const texCols = 16;
+
+function texU(i, p) {
+  const rv = ((i%texCols + p)*texTileSize)/256;
+  return rv;
 }
 
-function texV(cp, i) {
-  i += cp[1];
-  return Math.floor(i/16)/256;
+function texV(i, p) {
+  const rv = (Math.floor(i/texRows) + p)*texTileSize/256;
+  return rv;
 }
 
 function getcol(r, g, b) {
   return `#${(r&0xff).toString(16)}${(g&0xff).toString(16)}${(b&0xff).toString(16)}`
 }
 
-export const CHUNK_DIM = 32;
+export const CHUNK_DIM = 16;
 const CHUNK_DIM_SQ = CHUNK_DIM * CHUNK_DIM;
 
 export class Chunk {
@@ -44,7 +50,7 @@ export class Chunk {
     const positions = [];
     const normals = [];
     const indices = [];
-    const uvs = [];
+    const texCoords = [];
     const startX = 0;
     const startY = 0;
     const startZ = 0;
@@ -58,7 +64,7 @@ export class Chunk {
           const voxel = this.get(voxelX, voxelY, voxelZ);
           if (voxel > 0) {
             for (const {dir} of VoxelWorld.faces) {
-            for (const {dir, corners} of VoxelWorld.faces) {
+            for (const {dir, corners, uvs} of VoxelWorld.faces) {
               const neighbor = this.get(
                   voxelX + dir[0],
                   voxelY + dir[1],
@@ -66,10 +72,12 @@ export class Chunk {
               if (!neighbor) {
                 // this voxel has no neighbor in this direction so we need a face.
                 const ndx = positions.length / 3;
-                for (const pos of corners) {
+                for (let i = 0; i < corners.length; i++) {
+                  const pos = corners[i];
+                  const uv = uvs[i];
                   positions.push(pos[0] + x, pos[1] + y, pos[2] + z);
                   normals.push(...dir);
-                  uvs.push(texU(pos, voxel), texV(pos, voxel));
+                  texCoords.push(texU(voxel, uv[0]), texV(voxel, uv[1]));
                 }
                 indices.push(
                   ndx, ndx + 1, ndx + 2,
@@ -85,10 +93,10 @@ export class Chunk {
 
     const geo = new THREE.BufferGeometry();
     const col = getcol(0xc0 + Math.random()*0x20, 0xc0 + Math.random()*0x20, 0xc0 + Math.random()*0x20);
-    const mat = new THREE.MeshLambertMaterial({color: col, map: voxelTextures}); 
+    const mat = new THREE.MeshLambertMaterial({side: THREE.DoubleSide, map: voxelTextures}); 
     geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));
     geo.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(normals), 3));
-    geo.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(uvs), 2));
+    geo.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(texCoords), 2));
     geo.setIndex(indices);
     this.mesh = new THREE.Mesh(geo, mat);
     this.mesh.position.set(this.wx*CHUNK_DIM, 0, this.wy*CHUNK_DIM);
@@ -119,6 +127,12 @@ VoxelWorld.faces = [
       [ 0, 1, 1 ],
       [ 0, 0, 1 ],
     ],
+    uvs: [
+      [0, 0],
+      [1, 0],
+      [0, 1],
+      [1, 1],
+    ],
   },
   { // right
     dir: [  1,  0,  0, ],
@@ -128,6 +142,13 @@ VoxelWorld.faces = [
       [ 1, 1, 0 ],
       [ 1, 0, 0 ],
     ],
+    uvs: [
+      [0, 0],
+      [1, 0],
+      [0, 1],
+      [1, 1],
+    ],
+
   },
   { // bottom
     dir: [  0, -1,  0, ],
@@ -137,6 +158,13 @@ VoxelWorld.faces = [
       [ 1, 0, 0 ],
       [ 0, 0, 0 ],
     ],
+    uvs: [
+      [0, 0],
+      [1, 0],
+      [0, 1],
+      [1, 1],
+    ],
+
   },
   { // top
     dir: [  0,  1,  0, ],
@@ -146,6 +174,13 @@ VoxelWorld.faces = [
       [ 0, 1, 0 ],
       [ 1, 1, 0 ],
     ],
+    uvs: [
+      [0, 0],
+      [1, 0],
+      [0, 1],
+      [1, 1],
+    ],
+
   },
   { // back
     dir: [  0,  0, -1, ],
@@ -155,6 +190,13 @@ VoxelWorld.faces = [
       [ 1, 1, 0 ],
       [ 0, 1, 0 ],
     ],
+    uvs: [
+      [0, 0],
+      [1, 0],
+      [0, 1],
+      [1, 1],
+    ],
+
   },
   { // front
     dir: [  0,  0,  1, ],
@@ -164,6 +206,13 @@ VoxelWorld.faces = [
       [ 0, 1, 1 ],
       [ 1, 1, 1 ],
     ],
+    uvs: [
+      [0, 0],
+      [1, 0],
+      [0, 1],
+      [1, 1],
+    ],
+
   },
 ];
 

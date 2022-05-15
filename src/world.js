@@ -6,7 +6,7 @@ function makeKey(x, y, z) {
   return `${x},${z}`;
 }
 
-const DAY_CYCLE_MAX = 120;
+const DAY_CYCLE_MAX = 50;
 const NIGHT_START = 25;
 const NIGHT_FRACTION = NIGHT_START / DAY_CYCLE_MAX;
 

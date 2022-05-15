@@ -27,7 +27,7 @@ const canvas = document.querySelector('#c');
 const renderer = new THREE.WebGLRenderer({canvas});
 renderer.setSize(1280,720,false);
 
-const player = new Player(20, 20, 20);
+const player = new Player(10, 8, 10);
 
 document.addEventListener("keydown", (e) => {
   IMPULSE[e.key] = true;
