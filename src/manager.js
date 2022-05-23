@@ -17,6 +17,7 @@ export class Manager{
     this.lastCx = null;
     this.lastCz = null;
     this.tasks = [];
+    this.update(0);
   }
 
   update(dt) {
@@ -26,14 +27,16 @@ export class Manager{
     const chunkX = Math.floor(px / 16);
     const chunkZ = Math.floor(pz / 16);
 
-    this.tasks.push(() => {
-      World.cleanup(chunkX, chunkZ);
-      if (chunkX != this.lastCx || chunkZ != this.lastCz) {
+    if (chunkX != this.lastCx || chunkZ != this.lastCz) {
+      this.tasks.push(() => {
+        World.cleanup(chunkX, chunkZ);
+        console.log("moved chunk!");
         for (let n of nearby) {
           this.tasks.push(() => {World.loadChunk(chunkX + n[0], chunkZ + n[1]);});
+          console.log("set task to load chunk..");
         }
-      }
-    });
+      });
+    }
 
     this.lastCx = chunkX;
     this.lastCz = chunkZ;
@@ -41,6 +44,7 @@ export class Manager{
 
   runtask() {
     if (this.tasks.length > 0) {
+      console.log("do task");
       this.tasks.pop()();
     }
   }

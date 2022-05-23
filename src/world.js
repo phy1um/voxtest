@@ -33,7 +33,9 @@ class world {
   }
 
   loadChunk(xi, zi) {
+    if (xi < 0 || zi < 0) { return; }
     const key = makeKey(xi, 0, zi);
+    console.log(`load chunk: ${key}`)
     if (key in this.chunks) {
       return this.chunks[key];
     }
@@ -83,6 +85,22 @@ class world {
       this.scene.remove(this.sun);
       this.ambient.color.setRGB(0.2, 0.2, 0.2);
       this.scene.add(this.moon);
+    }
+  }
+
+  cleanup(x, z) {
+    for (let k in this.chunks) {
+      const p = k.split(",");
+      const xi = parseInt(p[0]);
+      const zi = parseInt(p[1]);
+      if (Math.abs(x - xi) > 2 || Math.abs(z - zi) > 2) {
+        console.log(`cleanup: ${xi},${zi}`);
+        const chunk = this.chunks[k];
+        if (chunk.has_mesh) {
+          this.scene.remove(chunk.getMesh());
+        }
+        delete this.chunks[k];
+      }
     }
   }
 

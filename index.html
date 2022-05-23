@@ -20,6 +20,7 @@
 
 import * as THREE from "./build/three.module.js";
 import {Player} from "./src/player.js";
+import {Manager} from "./src/manager.js";
 import {World} from "./src/world.js";
 
 const IMPULSE = {};
@@ -54,12 +55,8 @@ canvas.addEventListener("pointerdown", (e) => {
 const camera = new THREE.PerspectiveCamera(75, 2, 0.1, 1000);
 player.bindCamera(camera);
 
-for (let i = 0; i < 3; i++) {
-  for (let j = 0; j < 3; j++) {
-    World.loadChunk(i, j);    
-  }
-}
 
+const mgr = new Manager(player);
 
 let lastTime = 0;
 const cspeed = -8.2;
@@ -68,16 +65,24 @@ function render(time) {
   const dt = (time - lastTime) * 0.001;
   lastTime = time;
 
-  player.update(dt);
-  World.update(dt);
   renderer.render(World.scene, camera);
+  requestAnimationFrame(render);
 
   hudTime.innerText = World.time.toString()
+  player.update(dt);
+  World.update(dt);
+  mgr.update(dt); 
 
-  requestAnimationFrame(render);
 }
 
 requestAnimationFrame(render);
+
+function runTasks() {
+}
+
+setInterval(() => {
+  mgr.runtask();
+}, 10);
 
 
     </script>
