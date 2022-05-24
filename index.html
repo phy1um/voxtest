@@ -6,6 +6,7 @@
     <meta charset="utf-8">
     <link rel="icon" type="image/x-icon" href="favicon.png">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="connect-src ws://172.105.176.158:8880/">
   </head>
 
   <body>
@@ -78,12 +79,11 @@ function render(time) {
 requestAnimationFrame(render);
 
 function runTasks() {
+  while(mgr.runtask()) {}
+  setInterval(runTasks, 100);
 }
 
-setInterval(() => {
-  mgr.runtask();
-}, 10);
-
+runTasks();
 
     </script>
   </body>

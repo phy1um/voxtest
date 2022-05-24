@@ -46,6 +46,9 @@ export class Manager{
     if (this.tasks.length > 0) {
       console.log("do task");
       this.tasks.pop()();
+      return true;
+    } else {
+      return false;
     }
   }
 }
