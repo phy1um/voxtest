@@ -1,8 +1,8 @@
 import {Chunk, CHUNK_DIM} from "./chunk.js";
 import {basicPopulate} from "./gen.js";
-import * as THREE from "../build/three.module.js";
+import * as THREE from "three";
 
-function makeKey(x, y, z) {
+function makeKey(x: number, y: number, z: number) {
   return `${x},${z}`;
 }
 
@@ -14,8 +14,15 @@ const DAY_SKY = new THREE.Color(0x8fd9ef);
 const NIGHT_SKY = new THREE.Color(0x040514);
 
 class world {
+  chunks: Map<string, Chunk>;
+  time: number;
+  scene: any;
+  ambient: THREE.AmbientLight;
+  sun: any;
+  moon: any;
+
   constructor() {
-    this.chunks = {};
+    this.chunks = new Map<string, Chunk>();
     this.scene = new THREE.Scene();
 
     this.ambient = new THREE.AmbientLight(0x404040);
@@ -32,7 +39,7 @@ class world {
     this.time = 0;
   }
 
-  loadChunk(xi, zi) {
+  loadChunk(xi: number, zi: number) {
     if (xi < 0 || zi < 0) { return; }
     const key = makeKey(xi, 0, zi);
     console.log(`load chunk: ${key}`)
@@ -46,12 +53,12 @@ class world {
     return c;
   }
 
-  chunkLoaded(xi, zi) {
+  chunkLoaded(xi: number, zi: number) {
     const key = makeKey(xi, 0, zi);
     return key in this.chunks;
   }
 
-  pointFree(x, y, z) {
+  pointFree(x: number, y: number, z: number) {
     const xi = Math.floor(x / CHUNK_DIM); 
     const yi = Math.floor(y / CHUNK_DIM); 
     const zi = Math.floor(z / CHUNK_DIM); 
@@ -66,7 +73,7 @@ class world {
     return (cv == 0)
   }
 
-  update(dt) {
+  update(dt: number) {
     this.time = (this.time + dt) % DAY_CYCLE_MAX;
     if (this.time < NIGHT_START) {
       const sunTime = this.time / NIGHT_START;
@@ -88,7 +95,7 @@ class world {
     }
   }
 
-  cleanup(x, z) {
+  cleanup(x: number, z: number) {
     for (let k in this.chunks) {
       const p = k.split(",");
       const xi = parseInt(p[0]);

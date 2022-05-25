@@ -1,13 +1,23 @@
-function lerp(v0, v1, i) {
+function lerp(v0: number, v1: number, i: number) : number {
   return v0 + (v1 - v0) * i;
 }
 
-function smoothstep(t) {
+function smoothstep(t: number) : number {
   return t * t * (3 - 2*t);
 }
 
+type Vec2 = {
+  x: number;
+  y: number;
+}
+
 export class Perlin {
-  constructor(w, h, s) {
+  width: number;
+  height: number;
+  scale: number;
+  vectors: Array<Vec2>;
+
+  constructor(w: number, h: number, s: number) {
     this.width = w;
     this.height = h;
     this.scale = s;
@@ -18,7 +28,7 @@ export class Perlin {
     }
   }
 
-  vectorAt(x, y) {
+  vectorAt(x: number, y: number) : Vec2 {
     let xi = x % this.width;
     if (x < 0) {
       xi += this.width;
@@ -28,10 +38,10 @@ export class Perlin {
       yi += this.height;
     }
 
-    return this.vectors[y * this.width + x];
+    return this.vectors[yi * this.width + xi];
   }
 
-  sample(x, y) {
+  sample(x: number, y: number) : number {
     const xi = Math.floor(x / this.scale);
     const yi = Math.floor(y / this.scale);
 

@@ -1,4 +1,4 @@
-import * as THREE from "../build/three.module.js";
+import * as THREE from "three";
 import {World} from "./world.js";
 
 const PSPEED = 8.2;
@@ -21,6 +21,17 @@ function boxFree(v) {
 }
 
 export class Player {
+  pos: THREE.Vector3;
+  fwd: THREE.Vector3;
+  rotX: number;
+  rotY: number;
+  camera: any;
+  velocity: THREE.Vector3;
+  vspeed: number;
+  floatTime: number;
+  grounded: boolean;
+  keys: Map<string, boolean>;
+
   constructor(x, y, z) {
     this.pos = new THREE.Vector3(x, y, z);
     this.fwd = new THREE.Vector3(0,0,1);
@@ -30,7 +41,7 @@ export class Player {
     this.velocity = new THREE.Vector3(0,0,0);
     this.vspeed = 0;
     this.floatTime = 0;
-    this.keys = {};
+    this.keys = new Map<string,boolean>(); 
     this.updateCamera();
   }
 

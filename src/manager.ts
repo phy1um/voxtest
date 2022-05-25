@@ -12,7 +12,12 @@ const nearby = [
 ];
 
 export class Manager{
-  constructor(p) {
+  focus: any;
+  lastCx: number;
+  lastCz: number;
+  tasks: Array<Function>;
+
+  constructor(p: any) {
     this.focus = p;
     this.lastCx = null;
     this.lastCz = null;
@@ -20,7 +25,7 @@ export class Manager{
     this.update(0);
   }
 
-  update(dt) {
+  update(dt: number) {
     const px = this.focus.pos.x;
     const pz = this.focus.pos.z;
 

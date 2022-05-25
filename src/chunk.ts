@@ -2,11 +2,7 @@
 // code stolen from
 // https://r105.threejsfundamentals.org/threejs/lessons/threejs-voxel-geometry.html 
 
-import * as THREE from "../build/three.module.js"
-
-const CHUNK_SIZE_X = 32;
-const CHUNK_SIZE_Y = 32;
-const CHUNK_SIZE_Z = 32;
+import * as THREE from "three";
 
 const voxelTextures = new THREE.TextureLoader().load("./img/tiles.png")
 voxelTextures.magFilter = THREE.NearestFilter;
@@ -16,29 +12,35 @@ const texTileSize = 16;
 const texRows = 16;
 const texCols = 16;
 
-function texU(i, p) {
+function texU(i: number, p: number) {
   const rv = ((i%texCols + p)*texTileSize)/256;
   return rv;
 }
 
-function texV(i, p) {
+function texV(i: number, p: number) {
   const rv = (Math.floor(i/texRows) + p)*texTileSize/256;
   return rv;
 }
 
-function getcol(r, g, b) {
-  return `#${(r&0xff).toString(16)}${(g&0xff).toString(16)}${(b&0xff).toString(16)}`
-}
+//function getcol(r: number, g: number, b: number) {
+//  return `#${(r&0xff).toString(16)}${(g&0xff).toString(16)}${(b&0xff).toString(16)}`
+//}
 
 export const CHUNK_DIM = 16;
 const CHUNK_DIM_SQ = CHUNK_DIM * CHUNK_DIM;
 
 export class Chunk {
-  constructor(worldx, worldy) {
+
+  wx!: number;
+  wy!: number;
+  blocks!: Uint8Array;
+  mesh?: any;
+  has_mesh!: boolean;
+
+  constructor(worldx: number, worldy: number) {
     this.wx = worldx;
     this.wy = worldy;
     this.blocks = new Uint8Array(CHUNK_DIM*CHUNK_DIM*CHUNK_DIM);
-    this.mesh = null;
     this.has_mesh = false;
   }
 
@@ -63,12 +65,11 @@ export class Chunk {
           const voxelX = startX + x;
           const voxel = this.get(voxelX, voxelY, voxelZ);
           if (voxel > 0) {
-            for (const {dir} of VoxelWorld.faces) {
             for (const {dir, corners, uvs} of VoxelWorld.faces) {
               const neighbor = this.get(
-                  voxelX + dir[0],
-                  voxelY + dir[1],
-                  voxelZ + dir[2]);
+                voxelX + dir[0],
+                voxelY + dir[1],
+                voxelZ + dir[2]);
               if (!neighbor) {
                 // this voxel has no neighbor in this direction so we need a face.
                 const ndx = positions.length / 3;
@@ -83,7 +84,6 @@ export class Chunk {
                   ndx, ndx + 1, ndx + 2,
                   ndx + 2, ndx + 1, ndx + 3,
                 );
-              }
             }
           }
         }
@@ -92,8 +92,8 @@ export class Chunk {
   }
 
     const geo = new THREE.BufferGeometry();
-    const col = getcol(0xc0 + Math.random()*0x20, 0xc0 + Math.random()*0x20, 0xc0 + Math.random()*0x20);
-    const mat = new THREE.MeshLambertMaterial({side: THREE.DoubleSide, map: voxelTextures}); 
+    // const col = getcol(0xc0 + Math.random()*0x20, 0xc0 + Math.random()*0x20, 0xc0 + Math.random()*0x20);
+    const mat = <any>new THREE.MeshLambertMaterial({side: THREE.DoubleSide, map: voxelTextures}); 
     geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));
     geo.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(normals), 3));
     geo.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(texCoords), 2));
@@ -105,11 +105,11 @@ export class Chunk {
     return this.mesh;
   }  
 
-  get(x, y, z) {
+  get(x: number, y: number, z: number) {
     return this.blocks[x + (y * CHUNK_DIM) + (z * CHUNK_DIM_SQ)];
   }
 
-  set(x, y, z, to) {
+  set(x: number, y: number, z: number, to: number) {
     this.blocks[x + (y * CHUNK_DIM) + (z * CHUNK_DIM_SQ)] = to;
   }
 
@@ -117,102 +117,113 @@ export class Chunk {
 }
 
 
-const VoxelWorld = {};
-VoxelWorld.faces = [
-  { // left
-    dir: [ -1,  0,  0, ],
-    corners: [
-      [ 0, 1, 0 ],
-      [ 0, 0, 0 ],
-      [ 0, 1, 1 ],
-      [ 0, 0, 1 ],
-    ],
-    uvs: [
-      [0, 0],
-      [1, 0],
-      [0, 1],
-      [1, 1],
-    ],
-  },
-  { // right
-    dir: [  1,  0,  0, ],
-    corners: [
-      [ 1, 1, 1 ],
-      [ 1, 0, 1 ],
-      [ 1, 1, 0 ],
-      [ 1, 0, 0 ],
-    ],
-    uvs: [
-      [0, 0],
-      [1, 0],
-      [0, 1],
-      [1, 1],
-    ],
+type VoxelFaceSpec = {
+  dir: Array<number>;
+  corners: Array<Array<number>>;
+  uvs: Array<Array<number>>;
+}
 
-  },
-  { // bottom
-    dir: [  0, -1,  0, ],
-    corners: [
-      [ 1, 0, 1 ],
-      [ 0, 0, 1 ],
-      [ 1, 0, 0 ],
-      [ 0, 0, 0 ],
-    ],
-    uvs: [
-      [0, 0],
-      [1, 0],
-      [0, 1],
-      [1, 1],
-    ],
+type VoxelWorldKind = {
+  faces: Array<VoxelFaceSpec>;
+};
 
-  },
-  { // top
-    dir: [  0,  1,  0, ],
-    corners: [
-      [ 0, 1, 1 ],
-      [ 1, 1, 1 ],
-      [ 0, 1, 0 ],
-      [ 1, 1, 0 ],
-    ],
-    uvs: [
-      [0, 0],
-      [1, 0],
-      [0, 1],
-      [1, 1],
-    ],
+const VoxelWorld: VoxelWorldKind = {
+  faces: [
+    { // left
+      dir: [ -1,  0,  0, ],
+      corners: [
+        [ 0, 1, 0 ],
+        [ 0, 0, 0 ],
+        [ 0, 1, 1 ],
+        [ 0, 0, 1 ],
+      ],
+      uvs: [
+        [0, 0],
+        [1, 0],
+        [0, 1],
+        [1, 1],
+      ],
+    },
+    { // right
+      dir: [  1,  0,  0, ],
+      corners: [
+        [ 1, 1, 1 ],
+        [ 1, 0, 1 ],
+        [ 1, 1, 0 ],
+        [ 1, 0, 0 ],
+      ],
+      uvs: [
+        [0, 0],
+        [1, 0],
+        [0, 1],
+        [1, 1],
+      ],
 
-  },
-  { // back
-    dir: [  0,  0, -1, ],
-    corners: [
-      [ 1, 0, 0 ],
-      [ 0, 0, 0 ],
-      [ 1, 1, 0 ],
-      [ 0, 1, 0 ],
-    ],
-    uvs: [
-      [0, 0],
-      [1, 0],
-      [0, 1],
-      [1, 1],
-    ],
+    },
+    { // bottom
+      dir: [  0, -1,  0, ],
+      corners: [
+        [ 1, 0, 1 ],
+        [ 0, 0, 1 ],
+        [ 1, 0, 0 ],
+        [ 0, 0, 0 ],
+      ],
+      uvs: [
+        [0, 0],
+        [1, 0],
+        [0, 1],
+        [1, 1],
+      ],
 
-  },
-  { // front
-    dir: [  0,  0,  1, ],
-    corners: [
-      [ 0, 0, 1 ],
-      [ 1, 0, 1 ],
-      [ 0, 1, 1 ],
-      [ 1, 1, 1 ],
-    ],
-    uvs: [
-      [0, 0],
-      [1, 0],
-      [0, 1],
-      [1, 1],
-    ],
+    },
+    { // top
+      dir: [  0,  1,  0, ],
+      corners: [
+        [ 0, 1, 1 ],
+        [ 1, 1, 1 ],
+        [ 0, 1, 0 ],
+        [ 1, 1, 0 ],
+      ],
+      uvs: [
+        [0, 0],
+        [1, 0],
+        [0, 1],
+        [1, 1],
+      ],
 
-  },
-];
+    },
+    { // back
+      dir: [  0,  0, -1, ],
+      corners: [
+        [ 1, 0, 0 ],
+        [ 0, 0, 0 ],
+        [ 1, 1, 0 ],
+        [ 0, 1, 0 ],
+      ],
+      uvs: [
+        [0, 0],
+        [1, 0],
+        [0, 1],
+        [1, 1],
+      ],
+
+    },
+    { // front
+      dir: [  0,  0,  1, ],
+      corners: [
+        [ 0, 0, 1 ],
+        [ 1, 0, 1 ],
+        [ 0, 1, 1 ],
+        [ 1, 1, 1 ],
+      ],
+      uvs: [
+        [0, 0],
+        [1, 0],
+        [0, 1],
+        [1, 1],
+      ],
+
+    },
+  ]
+};
 

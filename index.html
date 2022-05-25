@@ -6,7 +6,6 @@
     <meta charset="utf-8">
     <link rel="icon" type="image/x-icon" href="favicon.png">
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-    <meta http-equiv="Content-Security-Policy" content="connect-src ws://172.105.176.158:8880/">
   </head>
 
   <body>
@@ -17,74 +16,18 @@
       <h2 id="time">0</h2>
     </div>
 
+    <script async src="https://ga.jspm.io/npm:es-module-shims@1.5.5/dist/es-module-shims.js"></script>
+    <script type="importmap">
+	      {
+                "imports": {
+                  "three": "./build/three.module.js"
+                }
+              }
+    </script>
+
     <script type="module">
-
-import * as THREE from "./build/three.module.js";
-import {Player} from "./src/player.js";
-import {Manager} from "./src/manager.js";
-import {World} from "./src/world.js";
-
-const IMPULSE = {};
-const canvas = document.querySelector('#c');
-const renderer = new THREE.WebGLRenderer({canvas});
-renderer.setSize(1280,720,false);
-
-const player = new Player(10, 8, 10);
-
-document.addEventListener("keydown", (e) => {
-  IMPULSE[e.key] = true;
-  player.keyevent(e.key, true);
-});
-document.addEventListener("keyup", (e) => {
-  IMPULSE[e.key] = false;
-  player.keyevent(e.key, false);
-});
-
-let mouseLastX = -1;
-let mouseLastY = -1;
-document.addEventListener("mousemove", (e) => {
-  player.mouse(e.movementX, e.movementY);
-});
-
-canvas.addEventListener("pointerdown", (e) => {
-  console.log("click!");
-  canvas.requestPointerLock();
-}, "true");
-
-
-
-const camera = new THREE.PerspectiveCamera(75, 2, 0.1, 1000);
-player.bindCamera(camera);
-
-
-const mgr = new Manager(player);
-
-let lastTime = 0;
-const cspeed = -8.2;
-const hudTime = document.querySelector("#time");
-function render(time) {
-  const dt = (time - lastTime) * 0.001;
-  lastTime = time;
-
-  renderer.render(World.scene, camera);
-  requestAnimationFrame(render);
-
-  hudTime.innerText = World.time.toString()
-  player.update(dt);
-  World.update(dt);
-  mgr.update(dt); 
-
-}
-
-requestAnimationFrame(render);
-
-function runTasks() {
-  while(mgr.runtask()) {}
-  setInterval(runTasks, 100);
-}
-
-runTasks();
-
+      import {main} from "./dist/main.js";
+      main();
     </script>
   </body>
 

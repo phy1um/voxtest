@@ -1,10 +1,10 @@
 
-import {CHUNK_DIM} from "./chunk.js";
+import {Chunk, CHUNK_DIM} from "./chunk.js";
 import {Perlin} from "./noise.js";
 
 const p = new Perlin(48, 48, 1);
 
-export function basicPopulate(chunk) {
+export function basicPopulate(chunk: Chunk) {
   const wox = chunk.wx * CHUNK_DIM;
   const woz = chunk.wy * CHUNK_DIM;
   for(let xx = 0; xx < CHUNK_DIM; xx++) {
