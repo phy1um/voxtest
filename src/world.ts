@@ -87,11 +87,9 @@ class world {
       const hh = Math.sin(Math.PI*sunTime);
       this.sun.position.set(0.1, hh, Math.cos(Math.PI*sunTime));
       this.sun.intensity = hh*0.4;
-      this.ambient.color.setRGB(0.2 + hh*0.2, 0.2 + hh*0.2, 0.2 + hh*0.2);
+      //this.ambient.color.setRGB(0.2 + hh*0.2, 0.2 + hh*0.2, 0.2 + hh*0.2);
     } else {
-      this.scene.remove(this.sun);
-      this.ambient.color.setRGB(0.2, 0.2, 0.2);
-      this.scene.add(this.moon);
+      this.sun.intensity = 0;
     }
   }
 
