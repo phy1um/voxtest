@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "module": "es6",
-    "target": "es6",
+    "target": "es2020",
     "checkJs": true,
     "outDir": "./dist",
     "types": ["three"]

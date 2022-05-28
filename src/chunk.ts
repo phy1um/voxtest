@@ -3,6 +3,7 @@
 // https://r105.threejsfundamentals.org/threejs/lessons/threejs-voxel-geometry.html 
 
 import * as THREE from "three";
+import { ReadWire } from "./wire";
 
 const voxelTextures = new THREE.TextureLoader().load("./img/tiles.png")
 voxelTextures.magFilter = THREE.NearestFilter;
@@ -29,6 +30,19 @@ function texV(i: number, p: number) {
 export const CHUNK_DIM = 16;
 const CHUNK_DIM_SQ = CHUNK_DIM * CHUNK_DIM;
 
+export function ChunkFromWire(rw: ReadWire) : Chunk {
+  const cx = rw.getU32();
+  rw.getU32(); // discard y
+  const cz = rw.getU32();
+  const ar: Array<number> = [];
+  for (let i = 0; i < CHUNK_DIM_SQ * CHUNK_DIM; i++) {
+    const bv = rw.getU16();
+    ar.push(bv & 0xff);
+  }
+  return new Chunk(cx, cz, new Uint8Array(ar));
+}
+
+
 export class Chunk {
 
   wx!: number;
@@ -37,10 +51,10 @@ export class Chunk {
   mesh?: any;
   has_mesh!: boolean;
 
-  constructor(worldx: number, worldy: number) {
+  constructor(worldx: number, worldy: number, blocks: Uint8Array = new Uint8Array(CHUNK_DIM_SQ*CHUNK_DIM)) {
     this.wx = worldx;
     this.wy = worldy;
-    this.blocks = new Uint8Array(CHUNK_DIM*CHUNK_DIM*CHUNK_DIM);
+    this.blocks = blocks;
     this.has_mesh = false;
   }
 

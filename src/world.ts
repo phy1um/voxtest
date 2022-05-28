@@ -53,6 +53,12 @@ class world {
     return c;
   }
 
+  addChunk(c: Chunk) {
+    const key = makeKey(c.wx, 0, c.wy);
+    this.chunks[key] = c;
+    this.scene.add(c.getMesh());
+  }
+
   chunkLoaded(xi: number, zi: number) {
     const key = makeKey(xi, 0, zi);
     return key in this.chunks;

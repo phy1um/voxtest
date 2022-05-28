@@ -102,7 +102,7 @@ export class Player {
       }
       if (this.keys[" "]) {
         this.grounded = false;
-        this.vspeed = 20;
+        this.vspeed = 17;
         this.floatTime = 0.09;
         console.log("jump!");
         this.keys[" "] = false;
