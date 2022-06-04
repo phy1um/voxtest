@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+
+<html lang="en">
+  <head>
+    <title>net test</title>
+    <meta charset="utf-8">
+    <link rel="icon" type="image/x-icon" href="favicon.png">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+  </head>
+
+  <body>
+    <h1>Net Proto Tester</h1>
+    <div>
+      <h2>Responses</h2>
+      <pre id="resp"></pre>
+    </div>
+    <script>
+      const G = {};
+    </script>
+    <script async src="https://ga.jspm.io/npm:es-module-shims@1.5.5/dist/es-module-shims.js"></script>
+    <script type="importmap">
+	      {
+                "imports": {
+                  "three": "./build/three.module.js"
+                }
+              }
+    </script>
+
+    <script type="module">
+      import {ReadWire} from "./dist/wire.js";
+      import {Name} from "./dist/cmd.js";
+
+      const rsp = document.querySelector("#resp");
+      const ws = new WebSocket("ws://127.0.0.1:9991/");
+
+      ws.onmessage = e => {
+        e.data.arrayBuffer().then(b => {
+          const rw = new ReadWire(b);
+          const cmd = Name(rw.getU8());
+          const value = rw.getU64();
+          rsp.innerText = `${cmd}: ${value.toString(16)}`;
+        });
+      };
+
+      G.getWs = function() {
+        return ws;
+      }
+
+      G.send = function(d) {
+        ws.send(d);
+      }
+
+      G.rw = ReadWire;
+
+    </script>
+  </body>
+
+</html>
