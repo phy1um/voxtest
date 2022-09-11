@@ -1,49 +1,10 @@
 
-import {ReadWire, WriteWire} from "./wire";
-import {Chunk, ChunkFromWire, ChunkToWire, CHUNK_DIM} from "./chunk";
-import {Name, CMDs} from "./cmd";
+import {ReadWire} from "./wire";
+import {Name} from "./cmd";
 
 export interface ClientCon {
   addHandler(kind: number, fn: Function) : void; 
   requestChunk(xi: number, zi: number) : void;
-}
-
-export class OfflineClientCon implements ClientCon {
-
-  handlers!: any;
-  chunk: Chunk;
-
-  constructor() {
-    this.handlers = {};
-    this.chunk = new Chunk(0, 0);
-    for ( let xx = 0; xx < CHUNK_DIM; xx++ ) {
-      for (let yy = 0; yy < CHUNK_DIM; yy++ ) {
-        for (let zz = 0; zz < 3; zz++) {
-          this.chunk.set(xx, zz, yy, 1);
-        }
-      }
-    }
-  }
-
-  addHandler(kind: any, fn: any) {
-    this.handlers[kind] = fn;
-  }
-
-  requestChunk(xi: any, zi: any) {
-    const hc = this.handlers[CMDs.CHUNKDATA];
-    if (!hc) {
-      return;
-    }
-    const ab = new Uint8Array((CHUNK_DIM * CHUNK_DIM * CHUNK_DIM * 4) + 80);
-    const write = new WriteWire(ab);
-    this.chunk.wx = xi;
-    this.chunk.wy = zi;
-    ChunkToWire(this.chunk, write);
-
-    const read = new ReadWire(ab);
-    hc(0, read);
-  }
-   
 }
 
 export class WebsocketClientcon implements ClientCon {

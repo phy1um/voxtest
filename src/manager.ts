@@ -33,7 +33,7 @@ export class Manager{
     const chunkZ = Math.floor(pz / 16);
 
     if (chunkX != this.lastCx || chunkZ != this.lastCz) {
-      //World.cleanup(chunkX, chunkZ);
+      World.cleanup(chunkX, chunkZ);
       console.log("moved chunk!");
       for (let n of nearby) {
         this.tasks.push(() => {World.loadChunk(chunkX + n[0], chunkZ + n[1]);});

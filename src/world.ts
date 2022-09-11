@@ -1,5 +1,4 @@
 import {Chunk, CHUNK_DIM, ChunkFromWire} from "./chunk";
-import {basicPopulate} from "./gen";
 import {ClientCon} from "./client"; 
 import {CMDs} from "./cmd";
 import * as THREE from "three";
@@ -123,6 +122,9 @@ class world {
           this.scene.remove(chunk.getMesh());
         }
         delete this.chunks[k];
+        if (chunk.geo) {
+          chunk.geo.free();
+        }
       }
     }
   }

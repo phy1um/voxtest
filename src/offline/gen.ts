@@ -1,6 +1,6 @@
 
 import {Chunk, CHUNK_DIM} from "../chunk";
-import {Perlin} from "./noise";
+import {Perlin} from "../noise";
 
 const p = new Perlin(48, 48, 1);
 

@@ -1,11 +1,14 @@
 
-import * as THREE from "three";
 import {Player} from "./player";
 import {Manager} from "./manager";
 import {World} from "./world";
-import {OfflineClientCon, WebsocketClientcon} from "./client"; 
+import {WebsocketClientcon} from "./client"; 
+
+import { OfflineClientCon } from "./offline/client";
 
 import * as Stats from "stats.js";
+import * as THREE from "three";
+
 const stats = new Stats();
 stats.showPanel(0);
 document.body.appendChild(stats.dom);

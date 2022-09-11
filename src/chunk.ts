@@ -4,7 +4,7 @@
 
 import * as THREE from "three";
 import { ReadWire, WriteWire } from "./wire";
-import { ChunkPool } from "./chunkpool";
+import { CheckedBufferGeometry, ChunkPool } from "./chunkpool";
 
 const voxelTextures = new THREE.TextureLoader().load("./img/tiles.png")
 voxelTextures.magFilter = THREE.NearestFilter;
@@ -62,6 +62,7 @@ export class Chunk {
   blocks!: Uint8Array;
   mesh?: any;
   has_mesh!: boolean;
+  geo: CheckedBufferGeometry;
 
   constructor(worldx: number, worldy: number, blocks: Uint8Array = new Uint8Array(CHUNK_DIM_SQ*CHUNK_DIM)) {
     this.wx = worldx;
@@ -76,6 +77,7 @@ export class Chunk {
     }
 
     const chunkGeo = BPOOL.alloc();
+    this.geo = chunkGeo;
 
     const positions = chunkGeo.positionArray;
     let phead = 0;

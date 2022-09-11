@@ -8,6 +8,7 @@ export class CheckedBufferGeometry {
   positionArray: Float32Array;
   normalArray: Float32Array;
   uvArray: Float32Array;
+  owner: ChunkPool;
 
   constructor(geo: THREE.BufferGeometry, pos, norm, uv, indexArray: Uint16Array) {
     this.geo = geo;
@@ -26,6 +27,10 @@ export class CheckedBufferGeometry {
     this.geo.setAttribute('normal', new THREE.BufferAttribute(normSlice, 3));
     this.geo.setAttribute('uv', new THREE.BufferAttribute(uvSlice, 2));
     this.geo.setIndex(new THREE.BufferAttribute(indexSlice, 1));
+  }
+
+  free() {
+    this.owner.free(this);
   }
 }
 
@@ -78,9 +83,10 @@ export class ChunkPool {
     let out: CheckedBufferGeometry = this.freePool.pop();
     if (out === undefined) {
       out = this.makeGeo();
-    }
+    } 
 
     out.checkoutId = this.checkoutId;
+    out.owner = this;
     this.checkoutId += 1;
     this.used[out.checkoutId] = out;
     console.log(`alloc chunk ${out.checkoutId}`);
