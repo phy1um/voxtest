@@ -3,7 +3,8 @@
 // https://r105.threejsfundamentals.org/threejs/lessons/threejs-voxel-geometry.html 
 
 import * as THREE from "three";
-import { ReadWire } from "./wire";
+import { ReadWire, WriteWire } from "./wire";
+import { ChunkPool } from "./chunkpool";
 
 const voxelTextures = new THREE.TextureLoader().load("./img/tiles.png")
 voxelTextures.magFilter = THREE.NearestFilter;
@@ -42,6 +43,17 @@ export function ChunkFromWire(rw: ReadWire) : Chunk {
   return new Chunk(cx, cz, new Uint8Array(ar));
 }
 
+export function ChunkToWire(c: Chunk, w: WriteWire) : void {
+  w.putU32(c.wx);
+  w.putU32(0);
+  w.putU32(c.wy); 
+  for ( let i = 0; i < CHUNK_DIM_SQ * CHUNK_DIM; i++ ) {
+    w.putU16(c.blocks[i]);
+  }
+  return;
+}
+
+const BPOOL = new ChunkPool(CHUNK_DIM, CHUNK_DIM, 4, 30);
 
 export class Chunk {
 
@@ -63,56 +75,70 @@ export class Chunk {
       return this.mesh;
     }
 
-    const positions = [];
-    const normals = [];
-    const indices = [];
-    const texCoords = [];
-    const startX = 0;
-    const startY = 0;
-    const startZ = 0;
- 
+    const chunkGeo = BPOOL.alloc();
+
+    const positions = chunkGeo.positionArray;
+    let phead = 0;
+    const normals = chunkGeo.normalArray;
+    let nhead = 0;
+    const texCoords = chunkGeo.uvArray;
+    let thead = 0;
+    const indices = chunkGeo.indexArray;
+    let ihead = 0;
+
     for (let y = 0; y < CHUNK_DIM; ++y) {
-      const voxelY = startY + y;
       for (let z = 0; z < CHUNK_DIM; ++z) {
-        const voxelZ = startZ + z;
         for (let x = 0; x < CHUNK_DIM; ++x) {
-          const voxelX = startX + x;
-          const voxel = this.get(voxelX, voxelY, voxelZ);
+          const voxel = this.get(x, y, z);
           if (voxel > 0) {
             for (const {dir, corners, uvs} of VoxelWorld.faces) {
               const neighbor = this.get(
-                voxelX + dir[0],
-                voxelY + dir[1],
-                voxelZ + dir[2]);
-              if (!neighbor) {
+                x + dir[0],
+                y + dir[1],
+                z + dir[2]);
+              //if (neighbor == 0) {
                 // this voxel has no neighbor in this direction so we need a face.
-                const ndx = positions.length / 3;
+                const ndx = Math.floor(phead / 3);
                 for (let i = 0; i < corners.length; i++) {
                   const pos = corners[i];
                   const uv = uvs[i];
-                  positions.push(pos[0] + x, pos[1] + y, pos[2] + z);
-                  normals.push(...dir);
-                  texCoords.push(texU(voxel, uv[0]), texV(voxel, uv[1]));
+                  positions[phead] = pos[0] + x;
+                  positions[phead+1] = pos[1] + y;
+                  positions[phead+2] = pos[2] + z;
+                  phead += 3;
+
+                  normals[nhead] = dir[0];
+                  normals[nhead+1] = dir[1];
+                  normals[nhead+2] = dir[2];
+                  nhead += 3;
+
+                  texCoords[thead] = texU(voxel, uv[0]);
+                  texCoords[thead+1] = texV(voxel, uv[1]);
+                  thead += 2;
                 }
+                /*
                 indices.push(
                   ndx, ndx + 1, ndx + 2,
                   ndx + 2, ndx + 1, ndx + 3,
                 );
-            }
+                */
+                indices[ihead] = ndx;
+                indices[ihead+1] = ndx+1;
+                indices[ihead+2] = ndx+2;
+                indices[ihead+3] = ndx+2;
+                indices[ihead+4] = ndx+1;
+                indices[ihead+5] = ndx+3;
+                ihead += 6;
+            //}
           }
         }
       }
     }
   }
 
-    const geo = new THREE.BufferGeometry();
-    // const col = getcol(0xc0 + Math.random()*0x20, 0xc0 + Math.random()*0x20, 0xc0 + Math.random()*0x20);
     const mat = <any>new THREE.MeshLambertMaterial({side: THREE.DoubleSide, map: voxelTextures}); 
-    geo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(positions), 3));
-    geo.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(normals), 3));
-    geo.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(texCoords), 2));
-    geo.setIndex(indices);
-    this.mesh = new THREE.Mesh(geo, mat);
+    chunkGeo.rebind(phead, nhead, thead, ihead);
+    this.mesh = new THREE.Mesh(chunkGeo.geo, mat);
     this.mesh.position.set(this.wx*CHUNK_DIM, 0, this.wy*CHUNK_DIM);
     this.has_mesh = true;
 

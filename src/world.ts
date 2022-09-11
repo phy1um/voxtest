@@ -1,5 +1,7 @@
-import {Chunk, CHUNK_DIM} from "./chunk.js";
-import {basicPopulate} from "./gen.js";
+import {Chunk, CHUNK_DIM, ChunkFromWire} from "./chunk";
+import {basicPopulate} from "./gen";
+import {ClientCon} from "./client"; 
+import {CMDs} from "./cmd";
 import * as THREE from "three";
 
 function makeKey(x: number, y: number, z: number) {
@@ -20,6 +22,7 @@ class world {
   ambient: THREE.AmbientLight;
   sun: any;
   moon: any;
+  _client: any;
 
   constructor() {
     this.chunks = new Map<string, Chunk>();
@@ -36,7 +39,19 @@ class world {
     this.scene.add(this.sun);
     this.scene.background = new THREE.Color(0x111111);
 
+    this._client = null;
+
     this.time = 0;
+  }
+
+  bindClient(c: ClientCon) {
+    this._client = c;
+    this._client.addHandler(CMDs.CHUNKDATA, (c, wire) => this.chunkFromWire(wire));
+  }
+
+  chunkFromWire(w) {
+    const c = ChunkFromWire(w);
+    this.addChunk(c);
   }
 
   loadChunk(xi: number, zi: number) {
@@ -44,16 +59,15 @@ class world {
     const key = makeKey(xi, 0, zi);
     console.log(`load chunk: ${key}`)
     if (key in this.chunks) {
-      return this.chunks[key];
+      console.log(`skip loading chunk in cache`);
+      return;
     }
-    const c = new Chunk(xi, zi);
-    basicPopulate(c);
-    this.chunks[key] = c;
-    this.scene.add(c.getMesh());
-    return c;
+    // request from con  
+    this._client.requestChunk(xi, zi);
   }
 
   addChunk(c: Chunk) {
+    console.log("adding chunk to scene");
     const key = makeKey(c.wx, 0, c.wy);
     this.chunks[key] = c;
     this.scene.add(c.getMesh());
@@ -88,12 +102,10 @@ class world {
       } else {
         this.scene.background.lerpColors(DAY_SKY, NIGHT_SKY, (sunTime-0.5)*2);
       }
-      this.scene.add(this.sun);
-      this.scene.remove(this.moon);
       const hh = Math.sin(Math.PI*sunTime);
       this.sun.position.set(0.1, hh, Math.cos(Math.PI*sunTime));
       this.sun.intensity = hh*0.4;
-      //this.ambient.color.setRGB(0.2 + hh*0.2, 0.2 + hh*0.2, 0.2 + hh*0.2);
+      this.ambient.color.setRGB(0.2 + hh*0.2, 0.2 + hh*0.2, 0.2 + hh*0.2);
     } else {
       this.sun.intensity = 0;
     }

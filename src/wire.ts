@@ -70,3 +70,41 @@ export class ReadWire {
   }
 }
 
+export class WriteWire {
+  _stream: Uint8Array;
+  _head: number;
+
+  constructor(buffer: Uint8Array, offset: number = 0) {
+    this._stream = buffer;
+    this._head = offset;
+  }
+
+  putU8(x: number) {
+    if (!Number.isInteger(x)) {
+      console.error("!!!");
+    }
+    this._stream[this._head] = x & 0xff;
+    this._head += 1;
+  }
+
+  putU16(x: number) {
+    if (!Number.isInteger(x)) {
+      console.error("!!!");
+    }
+    this.putU8(x & 0xff);
+    this.putU8((x & 0xff00) >> 8);
+  }
+
+
+  putU32(x: number) {
+    if (!Number.isInteger(x)) {
+      console.error("!!!");
+    }
+    this.putU8(x & 0xff);
+    this.putU8((x & 0xff00) >> 8);
+    this.putU8((x & 0xff0000) >> 16);
+    this.putU8((x & 0xff000000) >> 24);
+  }
+
+}
+

@@ -9,9 +9,10 @@
   </head>
 
   <body>
-    <div id="content">
-      <canvas id="c" width=1280 height=720></canvas>
+    <div id="content" style="display:inline-block">
+      <canvas id="c" ></canvas>
     </div> 
+    <pre id="stats" style="display:inline-block; width: 300px; height: 400px; overflow-y: scroll;"></pre>
     <div id="hud">
       <h2 id="time">0</h2>
     </div>
@@ -25,10 +26,9 @@
               }
     </script>
 
-    <script type="module">
-      import {main} from "./dist/main.js";
-      main();
-    </script>
+    <pre id="log" style="display:inline-block; width: 300px; height: 0px; overflow-y: scroll;"></pre>
+
+    <script src="./main.js"></script>
   </body>
 
 </html>

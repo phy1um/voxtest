@@ -1,11 +1,14 @@
 import * as THREE from "three";
-import {World} from "./world.js";
+import {World} from "./world";
 
 const PSPEED = 8.2;
 const PACC = 3.2;
 const PGRAV = 0.98;
 const PVMAX = -12;
+//const PGRAV = 0;
+//const PVMAX = 0;
 const FOOTOFFSET = -0.6;
+const FOV = 50;
 
 const MSCALE_X = -0.001;
 const MSCALE_Y = 0.001;
@@ -31,18 +34,26 @@ export class Player {
   floatTime: number;
   grounded: boolean;
   keys: Map<string, boolean>;
+  wishDir: THREE.Vector3;
+  nextPos: THREE.Vector3;
+  working: THREE.Vector3;
+  foot: THREE.Vector3;
 
   constructor(x, y, z) {
     this.pos = new THREE.Vector3(x, y, z);
     this.fwd = new THREE.Vector3(0,0,1);
     this.rotX = 0;
     this.rotY = 0;
-    this.camera = new THREE.PerspectiveCamera(75, 2, 0.1, 1000);
+    this.camera = new THREE.PerspectiveCamera(FOV, 16/9, 0.1, 1000);
     this.velocity = new THREE.Vector3(0,0,0);
     this.vspeed = 0;
     this.floatTime = 0;
     this.keys = new Map<string,boolean>(); 
     this.updateCamera();
+    this.wishDir = new THREE.Vector3();
+    this.nextPos= new THREE.Vector3();
+    this.working = new THREE.Vector3();
+    this.foot = new THREE.Vector3();
   }
 
   bindCamera(c) {
@@ -64,27 +75,31 @@ export class Player {
 
   update(dt) {
 
-    const wishdir = new THREE.Vector3();
+    this.wishDir.set(0,0,0);
+
+    if (this.keys["."]) {
+      console.dir(this.pos);
+    }
 
     if (this.keys["w"]) {
-      wishdir.z = 1;
+      this.wishDir.z = 1;
     } 
     if (this.keys["s"]) {
-      wishdir.z -= 1; 
+      this.wishDir.z -= 1; 
     }
     if (this.keys["a"]) {
-      wishdir.x = 1;
+      this.wishDir.x = 1;
     }
     if (this.keys["d"]) {
-      wishdir.x -= 1;
+      this.wishDir.x -= 1;
     }
 
-    wishdir.normalize();
-    wishdir.applyAxisAngle(AXIS_Y, this.rotY);
+    this.wishDir.normalize();
+    this.wishDir.applyAxisAngle(AXIS_Y, this.rotY);
 
-    if (wishdir.length() > 0.2) {
-      wishdir.multiplyScalar(PACC);
-      this.velocity.add(wishdir);
+    if (this.wishDir.length() > 0.2) {
+      this.wishDir.multiplyScalar(PACC);
+      this.velocity.add(this.wishDir);
       if (this.velocity.length() > PSPEED) {
         this.velocity.multiplyScalar(PSPEED / this.velocity.length());
       }
@@ -94,10 +109,9 @@ export class Player {
 
     if (this.grounded) {
       this.vspeed = 0;
-      const foot = new THREE.Vector3();
-      foot.copy(this.pos);
-      foot.y += FOOTOFFSET;
-      if (World.pointFree(foot.x, foot.y, foot.z)) {
+      this.foot.copy(this.pos);
+      this.foot.y += FOOTOFFSET;
+      if (World.pointFree(this.foot.x, this.foot.y, this.foot.z)) {
         this.grounded = false;
       }
       if (this.keys[" "]) {
@@ -111,26 +125,24 @@ export class Player {
       this.vspeed = Math.max(this.vspeed - PGRAV, PVMAX);
     }
 
-    const fv = new THREE.Vector3();
-    fv.copy(this.velocity);
-    fv.multiplyScalar(dt);
+    this.working.copy(this.velocity);
+    this.working.multiplyScalar(dt);
 
-    const nextPos = new THREE.Vector3();
-    nextPos.copy(this.pos);
-    nextPos.add(fv);
+    this.nextPos.copy(this.pos);
+    this.nextPos.add(this.working);
 
-    if (boxFree(nextPos)) {
-      this.pos.copy(nextPos);
+    if (boxFree(this.nextPos)) {
+      this.pos.copy(this.nextPos);
     } else {
       this.velocity.x = 0;
       this.velocity.z = 0;
     }
 
-    nextPos.copy(this.pos); 
-    nextPos.y += this.vspeed*dt;
+    this.nextPos.copy(this.pos); 
+    this.nextPos.y += this.vspeed*dt;
 
-    if (World.pointFree(nextPos.x, nextPos.y + FOOTOFFSET, nextPos.z)) {
-      this.pos.copy(nextPos);
+    if (World.pointFree(this.nextPos.x, this.nextPos.y + FOOTOFFSET, this.nextPos.z)) {
+      this.pos.copy(this.nextPos);
     } else {
       this.vspeed = 0;
       this.grounded = true;

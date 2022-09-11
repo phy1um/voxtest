@@ -1,5 +1,5 @@
 
-import {World} from "./world.js";
+import {World} from "./world";
 
 const nearby = [
   [0, 0],
@@ -33,14 +33,12 @@ export class Manager{
     const chunkZ = Math.floor(pz / 16);
 
     if (chunkX != this.lastCx || chunkZ != this.lastCz) {
-      this.tasks.push(() => {
-        World.cleanup(chunkX, chunkZ);
-        console.log("moved chunk!");
-        for (let n of nearby) {
-          this.tasks.push(() => {World.loadChunk(chunkX + n[0], chunkZ + n[1]);});
-          console.log("set task to load chunk..");
-        }
-      });
+      //World.cleanup(chunkX, chunkZ);
+      console.log("moved chunk!");
+      for (let n of nearby) {
+        this.tasks.push(() => {World.loadChunk(chunkX + n[0], chunkZ + n[1]);});
+        console.log("set task to load chunk..");
+      }
     }
 
     this.lastCx = chunkX;

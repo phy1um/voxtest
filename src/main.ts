@@ -1,57 +1,60 @@
 
 import * as THREE from "three";
-import {Player} from "./player.js";
-import {Manager} from "./manager.js";
-import {World} from "./world.js";
-import { ReadWire } from "./wire.js";
-import {ChunkFromWire} from "./chunk.js";
-import {CMDs, Name} from "./cmd.js";
+import {Player} from "./player";
+import {Manager} from "./manager";
+import {World} from "./world";
+import {OfflineClientCon, WebsocketClientcon} from "./client"; 
 
-function requestChunk(xi: number, zi: number) {
-  return new Uint8Array([
-    0x10, 0, 0, 0,
-    xi, 0, 0, 0,
-    zi, 0, 0, 0,
-    0,
-  ]);
+import * as Stats from "stats.js";
+const stats = new Stats();
+stats.showPanel(0);
+document.body.appendChild(stats.dom);
+
+
+const OFFLINE = true;
+
+function makeHudTicker(e: HTMLElement, r: THREE.WebGLRenderer) {
+  return function() {
+    const msg = `
+calls: ${r.info.render.calls}
+tris: ${r.info.render.triangles}
+lines: ${r.info.render.lines}
+frame: ${r.info.render.frame}
+`;
+    e.innerText = msg;
+  }
 }
 
 export function main() {
   const IMPULSE = {};
   const canvas: HTMLElement = document.querySelector('#c');
   const renderer = new THREE.WebGLRenderer({canvas});
-  renderer.setSize(1280,720,false);
+  let ih = window.innerHeight - 80;
+  let iw = ih * 16.0/9.0;
+  if (iw > window.innerWidth - 350) {
+    iw = window.innerWidth - 350;
+    ih = iw * 9.0/16.0;
+  }
+
+  renderer.setSize(iw,ih,false);
 
   const player = new Player(10, 8, 10);
 
-  const con = new WebSocket("ws://127.0.0.1:9991/")
-  con.addEventListener("message", event => {
-    event.data.arrayBuffer().then((buf: ArrayBuffer) => {
-      const wire = new ReadWire(buf);
-      const cmd = wire.getU8();
-      switch(cmd) {
-      case CMDs.CHUNKDATA:
-        const c = ChunkFromWire(wire);
-        c.getMesh();
-        World.addChunk(c);
-        break;
-      default:
-        console.log(`unknown command (${cmd}), (${Name(cmd)})`);
-      }
-    });
-  });
-
-  con.addEventListener("open", () => {
-    con.send(requestChunk(0, 0));
-    con.send(requestChunk(0, 1));
-    con.send(requestChunk(1, 0));
-    con.send(requestChunk(1, 1));
-  });
-
-
+  if (OFFLINE) {
+    const off = new OfflineClientCon();
+    World.bindClient(off);
+  } else {
+    const con = new WebSocket("ws://127.0.0.1:9991/")
+    const client = new WebsocketClientcon(con);
+    World.bindClient(client);
+  }
+  
   document.addEventListener("keydown", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
     IMPULSE[e.key] = true;
     player.keyevent(e.key, true);
+    return false;
   });
   document.addEventListener("keyup", (e) => {
     IMPULSE[e.key] = false;
@@ -73,30 +76,40 @@ export function main() {
   player.bindCamera(camera);
 
 
-  //const mgr = new Manager(player);
+  const mgr = new Manager(player);
 
-  let lastTime: number = 0;
+  let lastTime: number = performance.now();;
   const hudTime: any = document.querySelector("#time");
+  const myStats: HTMLElement = document.querySelector("#stats");
+
+  const updateHud = makeHudTicker(myStats, renderer);
+
   function render(time: number) {
     const dt = (time - lastTime) * 0.001;
     lastTime = time;
 
+    stats.begin();
     renderer.render(World.scene, camera);
+    stats.end();
     requestAnimationFrame(render);
 
     hudTime.innerText = World.time.toString()
     player.update(dt);
     World.update(dt);
-    // mgr.update(dt); 
+    mgr.update(dt); 
 
+    updateHud();
   }
 
   requestAnimationFrame(render);
 
   function runTasks() {
-    // while(mgr.runtask()) {}
-    setInterval(runTasks, 100);
+    mgr.runtask();
   }
+
+  setInterval(runTasks, 10);
 
 }
 
+
+main();
