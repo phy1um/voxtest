@@ -15,7 +15,7 @@ export function basicPopulate(chunk: Chunk) {
       const hz = (h + 1.0) / 2.0;
       const cap = hz * CHUNK_DIM * 0.8;
       for(let yy = 0; yy <= cap; yy++) {
-        const ri = Math.random()*3 + 1;
+        const ri = Math.random()*8 + 1;
         chunk.set(xx, yy, zz, ri);
       }
     }

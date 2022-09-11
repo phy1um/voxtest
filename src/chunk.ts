@@ -21,7 +21,7 @@ function texU(i: number, p: number) {
 
 function texV(i: number, p: number) {
   const rv = (Math.floor(i/texRows) + p)*texTileSize/256;
-  return rv;
+  return (1 - rv);
 }
 
 //function getcol(r: number, g: number, b: number) {
@@ -114,8 +114,8 @@ export class Chunk {
                   normals[nhead+2] = dir[2];
                   nhead += 3;
 
-                  texCoords[thead] = texU(voxel, uv[0]);
-                  texCoords[thead+1] = texV(voxel, uv[1]);
+                  texCoords[thead] = texU(voxel-1, uv[0]);
+                  texCoords[thead+1] = texV(voxel-1, uv[1]);
                   thead += 2;
                 }
                 /*
