@@ -18,9 +18,9 @@ export class OfflineClientCon implements ClientCon {
     this.chunk = new Chunk(0, 0);
     for ( let xx = 0; xx < CHUNK_DIM; xx++ ) {
       for (let yy = 0; yy < CHUNK_DIM; yy++ ) {
-        this.chunk.set(xx, 0, yy, 1);
-        this.chunk.set(xx, 1, yy, 1);
-        this.chunk.set(xx, 2, yy, 1);
+        for (let zz = 0; zz < 3; zz++) {
+          this.chunk.set(xx, zz, yy, 1);
+        }
       }
     }
   }

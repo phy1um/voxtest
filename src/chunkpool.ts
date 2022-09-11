@@ -45,14 +45,14 @@ export class ChunkPool {
   used: Object;
 
   constructor(m: number, n: number, o: number, poolSize: number) {
-    const degenVertCount = m * n * o;
+    const degenVertCount = m * n * o * 24;
+    const degenIndexCount = m * n * o * 24 * 6;
     this.attributePositionCount = degenVertCount;
     this.attributePositionElems = 3;
     this.attributeNormalCount = degenVertCount;
     this.attributeNormalElems = 3;
     this.attributeUVCount = degenVertCount;
     this.attributeUVElems = 2;
-    const degenIndexCount = 90000;
     this.indexCount = degenIndexCount;
     this.checkoutId = 17;
 

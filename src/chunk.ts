@@ -53,7 +53,7 @@ export function ChunkToWire(c: Chunk, w: WriteWire) : void {
   return;
 }
 
-const BPOOL = new ChunkPool(CHUNK_DIM, CHUNK_DIM, 4, 30);
+const BPOOL = new ChunkPool(CHUNK_DIM, CHUNK_DIM, CHUNK_DIM, 30);
 
 export class Chunk {
 
@@ -96,7 +96,7 @@ export class Chunk {
                 x + dir[0],
                 y + dir[1],
                 z + dir[2]);
-              //if (neighbor == 0) {
+              if (neighbor == 0) {
                 // this voxel has no neighbor in this direction so we need a face.
                 const ndx = Math.floor(phead / 3);
                 for (let i = 0; i < corners.length; i++) {
@@ -129,7 +129,7 @@ export class Chunk {
                 indices[ihead+4] = ndx+1;
                 indices[ihead+5] = ndx+3;
                 ihead += 6;
-            //}
+            }
           }
         }
       }
@@ -146,11 +146,17 @@ export class Chunk {
   }  
 
   get(x: number, y: number, z: number) {
-    return this.blocks[x + (y * CHUNK_DIM) + (z * CHUNK_DIM_SQ)];
+    if (x >= 0 && x < CHUNK_DIM && y >= 0 && y < CHUNK_DIM && z >= 0 && z < CHUNK_DIM) {
+      return this.blocks[x + (y * CHUNK_DIM) + (z * CHUNK_DIM_SQ)];
+    } else {
+      return 0;
+    }
   }
 
   set(x: number, y: number, z: number, to: number) {
-    this.blocks[x + (y * CHUNK_DIM) + (z * CHUNK_DIM_SQ)] = to;
+    if (x >= 0 && x < CHUNK_DIM && y >= 0 && y < CHUNK_DIM && z >= 0 && z < CHUNK_DIM) {
+      this.blocks[x + (y * CHUNK_DIM) + (z * CHUNK_DIM_SQ)] = to;
+    }
   }
 
 
