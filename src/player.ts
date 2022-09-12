@@ -1,4 +1,6 @@
 import * as THREE from "three";
+import { Entity } from "./game/entity";
+import { KeyHandler } from "./game/terminal";
 import {World} from "./world";
 
 const PSPEED = 8.2;
@@ -23,12 +25,12 @@ function boxFree(v) {
     && World.pointFree(v.x + 0.5, v.y, v.z + 0.5);
 }
 
-export class Player {
+export class Player implements Entity {
   pos: THREE.Vector3;
   fwd: THREE.Vector3;
   rotX: number;
   rotY: number;
-  camera: any;
+  camera: THREE.PerspectiveCamera;
   velocity: THREE.Vector3;
   vspeed: number;
   floatTime: number;
@@ -38,12 +40,14 @@ export class Player {
   nextPos: THREE.Vector3;
   working: THREE.Vector3;
   foot: THREE.Vector3;
+  focus: KeyHandler;
+  focusDebounce: number = 0;
 
   constructor(x, y, z) {
     this.pos = new THREE.Vector3(x, y, z);
     this.fwd = new THREE.Vector3(0,0,1);
     this.rotX = 0;
-    this.rotY = 0;
+    this.rotY = Math.PI;
     this.camera = new THREE.PerspectiveCamera(FOV, 16/9, 0.1, 1000);
     this.velocity = new THREE.Vector3(0,0,0);
     this.vspeed = 0;
@@ -73,7 +77,7 @@ export class Player {
     this.camera.lookAt(fwd);
   }
 
-  update(dt) {
+  tick(dt: number, _: any): void {
 
     this.wishDir.set(0,0,0);
 
@@ -92,6 +96,10 @@ export class Player {
     }
     if (this.keys["d"]) {
       this.wishDir.x -= 1;
+    }
+
+    if (this.focus !== undefined) {
+      this.wishDir.set(0,0,0);
     }
 
     this.wishDir.normalize();
@@ -151,16 +159,50 @@ export class Player {
     this.updateCamera();
 
     this.floatTime -= dt;
+    this.focusDebounce -= dt;
   }
 
   keyevent(k, b) {
+    if (this.focus) {
+      if (b) {
+        this.focus.key(k);
+      }
+      return;
+    }
     this.keys[k] = b; 
   }
 
   mouse(dx, dy) {
+    if (this.focus) {
+      if (dx > 50 || dy > 50) {
+        this.clearFocus();
+      }
+      return;
+    }
     this.rotY = (this.rotY + dx*MSCALE_X) % 6.3; 
     this.rotX = clampf(this.rotX + dy*MSCALE_Y, -1.4, 1.4);
   }
+
+  addToScene(_: THREE.Scene): void {
+    // pass
+    return;
+  }
+  removeFromScene(_: THREE.Scene): void {
+    // pass;
+    return;
+  }
+
+  setFocus(k: KeyHandler): void {
+    if (this.focusDebounce < 0) {
+      this.focus = k;
+    }
+  }
+
+  clearFocus() {
+    this.focus = undefined;
+    this.focusDebounce = 1.2;
+  }
+
   
 }
 

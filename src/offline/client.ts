@@ -2,7 +2,7 @@ import { Chunk, ChunkToWire, CHUNK_DIM } from "../chunk";
 import { ClientCon } from "../client";
 import { CMDs } from "../cmd";
 import { ReadWire, WriteWire } from "../wire";
-import { basicPopulate } from "./gen";
+import { basicPopulate, flatPopulate } from "./gen";
 
 function makeKey(x: number, y: number, z: number) {
   return `${x},${z}`;
@@ -35,7 +35,7 @@ export class OfflineClientCon implements ClientCon {
     }
 
     const newChunk = new Chunk(xi, zi);
-    basicPopulate(newChunk); 
+    flatPopulate(newChunk); 
     this.world[key] = newChunk;
     sendChunk(hc, newChunk);
   }

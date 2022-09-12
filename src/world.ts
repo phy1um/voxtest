@@ -2,6 +2,7 @@ import {Chunk, CHUNK_DIM, ChunkFromWire} from "./chunk";
 import {ClientCon} from "./client"; 
 import {CMDs} from "./cmd";
 import * as THREE from "three";
+import { Entity } from "./game/entity";
 
 function makeKey(x: number, y: number, z: number) {
   return `${x},${z}`;
@@ -21,6 +22,7 @@ class world {
   ambient: THREE.AmbientLight;
   sun: any;
   moon: any;
+  entities: Array<Entity> = [];
   _client: any;
 
   constructor() {
@@ -108,6 +110,9 @@ class world {
     } else {
       this.sun.intensity = 0;
     }
+    for (let e of this.entities) {
+      e.tick(dt, this);
+    }
   }
 
   cleanup(x: number, z: number) {
@@ -127,6 +132,11 @@ class world {
         }
       }
     }
+  }
+
+  spawn(e: Entity) {
+    e.addToScene(this.scene);
+    this.entities.push(e);
   }
 
 }

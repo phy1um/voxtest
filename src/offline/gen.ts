@@ -21,3 +21,11 @@ export function basicPopulate(chunk: Chunk) {
     }
   }
 }
+
+export function flatPopulate(chunk: Chunk) {
+  for (let xx = 0; xx < CHUNK_DIM; xx++) {
+    for (let zz = 0; zz < CHUNK_DIM; zz++) {
+      chunk.set(xx, 0, zz, 1);
+    }
+  }
+}
