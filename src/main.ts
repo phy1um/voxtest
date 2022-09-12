@@ -12,8 +12,8 @@ import * as Stats from "stats.js";
 import * as THREE from "three";
 
 const stats = new Stats();
-stats.showPanel(0);
-document.body.appendChild(stats.dom);
+// stats.showPanel(0);
+// document.body.appendChild(stats.dom);
 
 
 const OFFLINE = true;

@@ -5,6 +5,16 @@ export function FontFromDownload(path: string, w: number, h: number) {
   return new Font2D(img, w, h);
 }
 
+function ordMap(i: number): number {
+  if ( i == 32 ) {
+    return 0;
+  }
+  if (i >= 32 && i <= 58) {
+    return i - 32;
+  }
+  return i;
+}
+
 export class Font2D {
   
   img!: HTMLImageElement;
@@ -32,7 +42,7 @@ export class Font2D {
 
   putString(ctx: CanvasRenderingContext2D, msg: string, x: number, y: number) {
     for ( let i = 0; i < msg.length; i++ ) {
-      const ord = msg.charCodeAt(i);
+      const ord = ordMap(msg.charCodeAt(i));
       if (ord == 10) {
         y += this.charHeight;
       } else {
@@ -40,5 +50,18 @@ export class Font2D {
       }
     }
   }
+
+  putStringOrds(ctx: CanvasRenderingContext2D, ords: Array<number>, x: number, y: number) {
+    for ( let i = 0; i < ords.length; i++ ) {
+      const ord = ordMap(ords[i]);
+      if (ord == 10) {
+        y += this.charHeight;
+      } else {
+        this.putChar(ctx, ord, x + (this.charWidth * i), y); 
+      }
+    }
+  }
+
+
 
 }

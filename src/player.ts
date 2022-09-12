@@ -42,6 +42,8 @@ export class Player implements Entity {
   foot: THREE.Vector3;
   focus: KeyHandler;
   focusDebounce: number = 0;
+  freeCount: number = 0;
+  freeTimer: number = 0;
 
   constructor(x, y, z) {
     this.pos = new THREE.Vector3(x, y, z);
@@ -160,6 +162,10 @@ export class Player implements Entity {
 
     this.floatTime -= dt;
     this.focusDebounce -= dt;
+    this.freeTimer -= dt;
+    if (this.freeTimer < 0) {
+      this.freeCount = 0;
+    }
   }
 
   keyevent(k, b) {
@@ -174,8 +180,12 @@ export class Player implements Entity {
 
   mouse(dx, dy) {
     if (this.focus) {
-      if (dx > 50 || dy > 50) {
-        this.clearFocus();
+      if (Math.abs(dx) > 200 || Math.abs(dy) > 200) {
+        this.freeCount += 1;
+        this.freeTimer = 1;
+        if (this.freeCount > 3) {
+          this.clearFocus();
+        }
       }
       return;
     }

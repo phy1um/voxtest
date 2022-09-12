@@ -1,10 +1,11 @@
 import * as THREE from "three";
 import { MenuState, OverlayController } from "../2d/menu";
 import { Player } from "../player";
+import { Cmd } from "../term/cli";
 import { Entity } from "./entity";
 
 const RT = 0.2;
-const BIND_TIMEOUT = 1;
+const BIND_TIMEOUT = 0.3;
 const BIND_DIST = 5;
 
 export interface KeyHandler {
@@ -19,18 +20,16 @@ export class Terminal implements Entity, KeyHandler {
   position: THREE.Vector3;
   fwd: THREE.Vector3;
   acc: number = 0;
-  bindAcc: number = 0;
+  bindAcc: number = BIND_TIMEOUT + 1;
 
   constructor() {
     const overlay = new OverlayController();
     overlay.hide();
     document.body.appendChild(overlay.dom);
 
-    const mainMenu = new MenuState();
-    mainMenu.addOption("START", () => {console.log("foo");});
-    mainMenu.addOption("STOP", () => {console.log("foo");});
+    const cli = new Cmd();
 
-    overlay.pushState(mainMenu);
+    overlay.pushState(cli);
     this.surface = overlay;
 
     const panel = new THREE.PlaneGeometry(2, 2);
