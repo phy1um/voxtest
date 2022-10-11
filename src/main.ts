@@ -89,7 +89,7 @@ export function main() {
 
 
   function render(time: number) {
-    const dt = (time - lastTime) * 0.001;
+    const dt = Math.min((time - lastTime) * 0.001, 0.3);
     lastTime = time;
 
     stats.begin();
