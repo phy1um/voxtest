@@ -2,11 +2,14 @@ import * as THREE from "three";
 import { MenuState, OverlayController } from "../2d/menu";
 import { Player } from "../player";
 import { Cmd } from "../term/cli";
+import { World } from "../world";
 import { Entity } from "./entity";
 
 const RT = 0.2;
 const BIND_TIMEOUT = 0.3;
-const BIND_DIST = 5;
+const BIND_DIST = 1.8;
+
+const FOCUS_OFFSET = new THREE.Vector3(0,0,1.7);
 
 export interface KeyHandler {
   key(k: string): void;
@@ -18,6 +21,7 @@ export class Terminal implements Entity, KeyHandler {
   texture: THREE.CanvasTexture;
   mesh: THREE.Mesh;
   position: THREE.Vector3;
+  focusOffset: THREE.Vector3;
   fwd: THREE.Vector3;
   acc: number = 0;
   bindAcc: number = BIND_TIMEOUT + 1;
@@ -40,6 +44,8 @@ export class Terminal implements Entity, KeyHandler {
     this.position = new THREE.Vector3(0,0,0);
 
     this.surface.draw();
+
+    this.focusOffset = new THREE.Vector3(0,0,1.7);
 
   }
 
@@ -65,11 +71,14 @@ export class Terminal implements Entity, KeyHandler {
     }
     this.bindAcc += dt;
     if (this.bindAcc > BIND_TIMEOUT) {
+      this.focusOffset.copy(this.position);
+      this.focusOffset.add(FOCUS_OFFSET);
       for (let e of w.entities as Array<Entity>) {
         if (e instanceof Player) {
           const player = e as Player;
-          if (player.pos.distanceTo(this.position) < BIND_DIST && player.rotY > 3 && player.rotY < 3.4) {
-            player.focus = this;
+          const pd = player.pos.distanceTo(this.focusOffset);
+          if (pd < BIND_DIST && player.rotY > 3 && player.rotY < 3.4) {
+            player.setFocus(this);
           }
         }
       }
@@ -80,6 +89,10 @@ export class Terminal implements Entity, KeyHandler {
 
   key(k: string) {
     this.surface.key(k);
+  }
+
+  bindWorld(w: World): void {
+
   }
 
 }

@@ -12,31 +12,38 @@ const nearby = [
 ];
 
 export class Manager{
-  focus: any;
+
+  world: World;
+  focusX: number;
+  focusZ: number;
   lastCx: number;
   lastCz: number;
   tasks: Array<Function>;
+  dead: boolean;
 
-  constructor(p: any) {
-    this.focus = p;
+  constructor(w: World, focusX: number, focusZ: number) {
+    this.world = w;
+    this.focusX = focusX;
+    this.focusZ = focusZ;
     this.lastCx = null;
     this.lastCz = null;
     this.tasks = [];
+    this.dead = false;
     this.update(0);
   }
 
   update(dt: number) {
-    const px = this.focus.pos.x;
-    const pz = this.focus.pos.z;
+    const px = this.focusX;
+    const pz = this.focusZ;
 
     const chunkX = Math.floor(px / 16);
     const chunkZ = Math.floor(pz / 16);
 
     if (chunkX != this.lastCx || chunkZ != this.lastCz) {
-      World.cleanup(chunkX, chunkZ);
+      this.world.cleanup(chunkX, chunkZ);
       console.log("moved chunk!");
       for (let n of nearby) {
-        this.tasks.push(() => {World.loadChunk(chunkX + n[0], chunkZ + n[1]);});
+        this.tasks.push(() => {this.world.loadChunk(chunkX + n[0], chunkZ + n[1]);});
         console.log("set task to load chunk..");
       }
     }
@@ -54,4 +61,14 @@ export class Manager{
       return false;
     }
   }
+
+  runTaskLoop(d: number) {
+    this.runtask();
+    if (!this.dead) {
+      setTimeout(() => {
+        this.runTaskLoop(d);
+      }, d);
+    }
+  }
+
 }

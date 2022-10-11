@@ -18,13 +18,6 @@ const MSCALE_Y = 0.001;
 const AXIS_Y = new THREE.Vector3(0,1,0);
 const AXIS_X = new THREE.Vector3(1,0,0);
 
-function boxFree(v) {
-  return World.pointFree(v.x - 0.5, v.y, v.z - 0.5)
-    && World.pointFree(v.x + 0.5, v.y, v.z - 0.5)
-    && World.pointFree(v.x - 0.5, v.y, v.z + 0.5)
-    && World.pointFree(v.x + 0.5, v.y, v.z + 0.5);
-}
-
 export class Player implements Entity {
   pos: THREE.Vector3;
   fwd: THREE.Vector3;
@@ -44,6 +37,7 @@ export class Player implements Entity {
   focusDebounce: number = 0;
   freeCount: number = 0;
   freeTimer: number = 0;
+  world: World;
 
   constructor(x, y, z) {
     this.pos = new THREE.Vector3(x, y, z);
@@ -121,7 +115,7 @@ export class Player implements Entity {
       this.vspeed = 0;
       this.foot.copy(this.pos);
       this.foot.y += FOOTOFFSET;
-      if (World.pointFree(this.foot.x, this.foot.y, this.foot.z)) {
+      if (this.world.pointFree(this.foot.x, this.foot.y, this.foot.z)) {
         this.grounded = false;
       }
       if (this.keys[" "]) {
@@ -141,7 +135,7 @@ export class Player implements Entity {
     this.nextPos.copy(this.pos);
     this.nextPos.add(this.working);
 
-    if (boxFree(this.nextPos)) {
+    if (this.boxFree(this.nextPos)) {
       this.pos.copy(this.nextPos);
     } else {
       this.velocity.x = 0;
@@ -151,7 +145,7 @@ export class Player implements Entity {
     this.nextPos.copy(this.pos); 
     this.nextPos.y += this.vspeed*dt;
 
-    if (World.pointFree(this.nextPos.x, this.nextPos.y + FOOTOFFSET, this.nextPos.z)) {
+    if (this.world.pointFree(this.nextPos.x, this.nextPos.y + FOOTOFFSET, this.nextPos.z)) {
       this.pos.copy(this.nextPos);
     } else {
       this.vspeed = 0;
@@ -169,6 +163,10 @@ export class Player implements Entity {
   }
 
   keyevent(k, b) {
+    if (k === "Escape" && this.focus) {
+      this.clearFocus();
+    }
+
     if (this.focus) {
       if (b) {
         this.focus.key(k);
@@ -212,6 +210,34 @@ export class Player implements Entity {
     this.focus = undefined;
     this.focusDebounce = 1.2;
   }
+
+  bindListeners() {
+    document.addEventListener("keydown", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this.keyevent(e.key, true);
+      return false;
+    });
+    document.addEventListener("keyup", (e) => {
+      this.keyevent(e.key, false);
+    });
+    document.addEventListener("mousemove", (e) => {
+      this.mouse(e.movementX, e.movementY);
+    });
+  }
+
+  bindWorld(world: World): void {
+    console.log("bind world to player!");
+    this.world = world;
+  }
+
+  boxFree(v) {
+    return this.world.pointFree(v.x - 0.5, v.y, v.z - 0.5)
+      && this.world.pointFree(v.x + 0.5, v.y, v.z - 0.5)
+      && this.world.pointFree(v.x - 0.5, v.y, v.z + 0.5)
+      && this.world.pointFree(v.x + 0.5, v.y, v.z + 0.5);
+  }
+
 
   
 }

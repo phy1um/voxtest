@@ -1,5 +1,6 @@
 import { FontFromDownload } from "../2d/font";
 import { OverlayState, OverlayController } from "../2d/menu";
+import { ConnectToServer } from "../main";
 
 const font = FontFromDownload("./img/font.png", 8, 16);
 const PROMPT = [4, 0];
@@ -27,8 +28,17 @@ const cmds = {
   },
   connect: {
     text: "CONNECT TO SERVER",
-    action(c) {
-      c.printLine("NOT IMPLEMENTED");
+    action(c, args) {
+      if (args.length < 2) {
+        c.printLine("USAGE: CONNECT <SERVER>");
+        return;
+      }
+      let serverTarget = args[1];
+      if (serverTarget[0] == ":") {
+        serverTarget = "ws://127.0.0.1" + serverTarget;
+      }
+      c.printLine(`CONNECTING TO "${serverTarget}"`)
+      ConnectToServer(serverTarget);
     },
   },
 };
@@ -59,11 +69,13 @@ export class Cmd implements OverlayState {
       this.printLine("DELETING SYSTEM32");
       return;
     }
-    if (! (msg in cmds)) {
-      this.printLine("INVALID COMMAND");
+    const args = msg.split(" ");
+    const cmd = args[0];
+    if (! (cmd in cmds)) {
+      this.printLine("UNKNOWN COMMAND: " + cmd);
       return;
     }
-    cmds[msg].action(this);
+    cmds[cmd].action(this, args);
   }
 
   printLine(msg: string) {
@@ -95,12 +107,13 @@ export class Cmd implements OverlayState {
     k = k.toUpperCase();
     if (k === "BACKSPACE") {
       this.buffer.unshift();
+      return;
     }
     let ord = k.charCodeAt(0);
     if (k === "ENTER") {
       ord = 10;
     }
-    if (k === "SHIFT") {
+    if (k === "SHIFT" || k === "CONTROL" || k === "ALT") {
       return;
     }
     console.log(`typed ${k} (-> ${ord})`);

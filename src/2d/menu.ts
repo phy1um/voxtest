@@ -18,6 +18,8 @@ export class OverlayController {
   constructor() {
     this.state = [];
     this.dom = document.createElement("canvas");
+    this.dom.width = 640;
+    this.dom.height = 480;
     this.dom.className = "displayCanvas";
     this.ctx = this.dom.getContext("2d");
   } 

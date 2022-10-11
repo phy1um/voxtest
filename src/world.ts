@@ -3,6 +3,8 @@ import {ClientCon} from "./client";
 import {CMDs} from "./cmd";
 import * as THREE from "three";
 import { Entity } from "./game/entity";
+import { Manager } from "./manager";
+import { Player } from "./player";
 
 function makeKey(x: number, y: number, z: number) {
   return `${x},${z}`;
@@ -15,7 +17,7 @@ const NIGHT_FRACTION = NIGHT_START / DAY_CYCLE_MAX;
 const DAY_SKY = new THREE.Color(0x8fd9ef);
 const NIGHT_SKY = new THREE.Color(0x040514);
 
-class world {
+export class World {
   chunks: Map<string, Chunk>;
   time: number;
   scene: any;
@@ -24,30 +26,48 @@ class world {
   moon: any;
   entities: Array<Entity> = [];
   _client: any;
+  doDayNight: boolean;
+  mgr: Manager;
+  focus: any;
 
-  constructor() {
+  constructor(
+    background = new THREE.Color(0x111111),
+    ambient = new THREE.AmbientLight(0x404040), 
+    sun = new THREE.DirectionalLight(0xd0d0d0, 0.4),
+    moon = new THREE.DirectionalLight(0x15101e, 0.1),
+    doDayNight = true,
+  ) {
     this.chunks = new Map<string, Chunk>();
     this.scene = new THREE.Scene();
 
-    this.ambient = new THREE.AmbientLight(0x404040);
-    this.sun = new THREE.DirectionalLight(0xd0d0d0, 0.4);
+    this.ambient = ambient;
+    this.sun = sun;
     this.sun.position.set(1, 10, 1.4);
 
-    this.moon = new THREE.DirectionalLight(0x15101e, 0.1);
+    this.moon = moon;
     this.moon.position.set(1.4, 2, 1.1);
 
     this.scene.add(this.ambient);
     this.scene.add(this.sun);
-    this.scene.background = new THREE.Color(0x111111);
+    this.scene.background = background;
 
     this._client = null;
 
     this.time = 0;
+    this.doDayNight = doDayNight;
+
+    this.mgr = new Manager(this, 0, 0);
+    this.focus = undefined;
+
   }
 
   bindClient(c: ClientCon) {
     this._client = c;
     this._client.addHandler(CMDs.CHUNKDATA, (c, wire) => this.chunkFromWire(wire));
+  }
+
+  bindPlayer(p: Player) {
+    this.focus = p;
   }
 
   chunkFromWire(w) {
@@ -95,7 +115,11 @@ class world {
   }
 
   update(dt: number) {
-    this.time = (this.time + dt) % DAY_CYCLE_MAX;
+    if (this.doDayNight) {
+      this.time = (this.time + dt) % DAY_CYCLE_MAX;
+    } else {
+      this.time = 10;
+    }
     if (this.time < NIGHT_START) {
       const sunTime = this.time / NIGHT_START;
       if (sunTime < 0.5) {
@@ -113,6 +137,11 @@ class world {
     for (let e of this.entities) {
       e.tick(dt, this);
     }
+    if (this.focus !== undefined) {
+      this.mgr.focusX = this.focus.pos.x;
+      this.mgr.focusZ = this.focus.pos.z;
+    }
+    this.mgr.update(dt);
   }
 
   cleanup(x: number, z: number) {
@@ -135,11 +164,22 @@ class world {
   }
 
   spawn(e: Entity) {
+    e.bindWorld(this);
     e.addToScene(this.scene);
     this.entities.push(e);
   }
 
+  destroy() {
+    this.mgr.dead = true;
+  }
+
 }
 
-export const World = new world();
+export function NewWorldForClient(c: ClientCon, onCreate: (w: World) => void): World {
+  const w = new World();
+  w.bindClient(c);
+  onCreate(w);
+  w.mgr.runTaskLoop(10);
+  return w;
+}
 
