@@ -32,23 +32,13 @@ frame: ${r.info.render.frame}
 }
 */
 
+const QUERY_SETTINGS: any = {};
+
 
 const ar = window.innerWidth / window.innerHeight;
 const camera = new THREE.PerspectiveCamera(75, ar, 0.1, 1000);
-const off = new OfflineClientCon();
-let world = NewWorldForClient(off, (world: World) => {
-  //const player = new Player(4, 1.6, 4);
-  const player = new Player(4, 1.6, 1);
-  player.bindListeners();
-  world.spawn(player)
-  player.bindCamera(camera);
-  world.bindPlayer(player);
-  const term = new Terminal();
-  term.mesh.scale.set(0.6, 0.6, 0.6);
-  term.position.set(4, 1.55, 3.3);
-  world.spawn(term);
-});
 
+let world: World;
 
 export function ConnectToServer(addr: string) {
   const con = new WebSocket(addr)
@@ -60,6 +50,29 @@ export function ConnectToServer(addr: string) {
     player.bindListeners();
     world.bindPlayer(player);
   });
+}
+
+if (window.location.search && window.location.search.length > 1) {
+  QUERY_SETTINGS.defaultServer = "ws://" + window.location.search.substring(1);
+}
+
+
+if (!QUERY_SETTINGS.defaultServer) {
+  const off = new OfflineClientCon();
+    world = NewWorldForClient(off, (world: World) => {
+      //const player = new Player(4, 1.6, 4);
+      const player = new Player(4, 1.6, 1);
+      player.bindListeners();
+      world.spawn(player)
+      player.bindCamera(camera);
+      world.bindPlayer(player);
+      const term = new Terminal();
+      term.mesh.scale.set(0.6, 0.6, 0.6);
+      term.position.set(4, 1.55, 3.3);
+      world.spawn(term);
+    });
+} else {
+ ConnectToServer(QUERY_SETTINGS.defaultServer); 
 }
 
 
