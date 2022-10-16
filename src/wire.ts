@@ -30,6 +30,14 @@ export class ReadWire {
     return this._getNum(8);
   } 
 
+  getFloat() : any {
+    const b0 = this.getU8();
+    const b1 = this.getU8();
+    const b2 = this.getU8();
+    const b3 = this.getU8();
+    return new Float32Array(new Uint8Array([b0, b1, b2, b3]).buffer)[0]
+  }
+
   _getNum(n: number) {
     while(this._head % n != 0) {
       this._head += 1;

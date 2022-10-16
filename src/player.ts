@@ -239,6 +239,9 @@ export class Player implements Entity {
   }
 
 
+  updateFromDescribe(flags: any, data: Uint32Array): void {
+    
+  }
   
 }
 

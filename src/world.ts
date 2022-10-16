@@ -5,6 +5,8 @@ import * as THREE from "three";
 import { Entity } from "./game/entity";
 import { Manager } from "./manager";
 import { Player } from "./player";
+import { ReadWire } from "./wire";
+import { NetDebugEntity } from "./game/net";
 
 function makeKey(x: number, y: number, z: number) {
   return `${x},${z}`;
@@ -17,6 +19,8 @@ const NIGHT_FRACTION = NIGHT_START / DAY_CYCLE_MAX;
 const DAY_SKY = new THREE.Color(0x8fd9ef);
 const NIGHT_SKY = new THREE.Color(0x040514);
 
+let UNIQUE_ENTITY_ID = 127;
+
 export class World {
   chunks: Map<string, Chunk>;
   time: number;
@@ -24,7 +28,7 @@ export class World {
   ambient: THREE.AmbientLight;
   sun: any;
   moon: any;
-  entities: Array<Entity> = [];
+  entities: object = {};
   _client: any;
   doDayNight: boolean;
   mgr: Manager;
@@ -64,7 +68,21 @@ export class World {
   bindClient(c: ClientCon) {
     this._client = c;
     this._client.addHandler(CMDs.CHUNKDATA, (c, wire) => this.chunkFromWire(wire));
-    this._client.addHandler(CMDs.EDESCRIBE, (c, wire) => {
+    this._client.addHandler(CMDs.EDESCRIBE, (c: number, wire: ReadWire) => {
+      const eid = wire.getU32();
+      const flags = wire.getU32();
+      const dataFields = wire.getU8();
+      const data = new Uint32Array(dataFields);
+      for (let i = 0; i < dataFields; i++) {
+        data[i] = wire.getU32(); 
+      }
+      if (this.entities[eid] === undefined) {
+        const e = new NetDebugEntity();
+        this.entities[eid] = e;
+        e.addToScene(this.scene);
+      }
+      const e : Entity = this.entities[eid];
+      e.updateFromDescribe(flags, data);
       console.log("got entity description!");
     });
   }
@@ -137,7 +155,8 @@ export class World {
     } else {
       this.sun.intensity = 0;
     }
-    for (let e of this.entities) {
+    for (let eid in this.entities) {
+      const e = this.entities[eid];
       e.tick(dt, this);
     }
     if (this.focus !== undefined) {
@@ -169,7 +188,8 @@ export class World {
   spawn(e: Entity) {
     e.bindWorld(this);
     e.addToScene(this.scene);
-    this.entities.push(e);
+    this.entities[UNIQUE_ENTITY_ID] = e;
+    UNIQUE_ENTITY_ID += 1;
   }
 
   destroy() {

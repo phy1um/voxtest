@@ -95,4 +95,8 @@ export class Terminal implements Entity, KeyHandler {
 
   }
 
+  updateFromDescribe(flags: any, data: Uint32Array): void {
+
+  }
+
 }
