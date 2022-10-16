@@ -5,6 +5,7 @@ export const CMDs = {
   "REQ_CHUNK": 0x10,
   "CHUNKDATA": 0x11,
   "PSTAT": 0x20,
+  "EDESCRIBE": 0x30,
 };
 
 const CMDByValue = {};

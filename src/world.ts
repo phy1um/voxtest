@@ -64,6 +64,9 @@ export class World {
   bindClient(c: ClientCon) {
     this._client = c;
     this._client.addHandler(CMDs.CHUNKDATA, (c, wire) => this.chunkFromWire(wire));
+    this._client.addHandler(CMDs.EDESCRIBE, (c, wire) => {
+      console.log("got entity description!");
+    });
   }
 
   bindPlayer(p: Player) {
