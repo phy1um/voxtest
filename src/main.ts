@@ -35,20 +35,12 @@ frame: ${r.info.render.frame}
 const QUERY_SETTINGS: any = {};
 
 
-const ar = window.innerWidth / window.innerHeight;
-const camera = new THREE.PerspectiveCamera(75, ar, 0.1, 1000);
-
 let world: World;
 
 export function ConnectToServer(addr: string) {
   const con = new WebSocket(addr)
   const client = new WebsocketClientcon(con);
   world = NewWorldForClient(client, (world: World) => {
-    const player = new Player(4, 10, 4);
-    world.spawn(player);
-    player.bindCamera(camera);
-    player.bindListeners();
-    world.bindPlayer(player);
   });
 }
 
@@ -64,7 +56,7 @@ if (!QUERY_SETTINGS.defaultServer) {
       const player = new Player(4, 1.6, 1);
       player.bindListeners();
       world.spawn(player)
-      player.bindCamera(camera);
+      // player.bindCamera(camera);
       world.bindPlayer(player);
       const term = new Terminal();
       term.mesh.scale.set(0.6, 0.6, 0.6);
@@ -95,11 +87,15 @@ export function main() {
 
 
   function render(time: number) {
+
+    if (world._client.closed()) {
+      return; 
+    }
     const dt = Math.min((time - lastTime) * 0.001, 0.3);
     lastTime = time;
 
     stats.begin();
-    renderer.render(world.scene, camera);
+    renderer.render(world.scene, world.cam);
     stats.end();
     requestAnimationFrame(render);
 

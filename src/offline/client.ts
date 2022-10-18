@@ -39,6 +39,12 @@ export class OfflineClientCon implements ClientCon {
     this.world[key] = newChunk;
     sendChunk(hc, newChunk);
   }
+
+  send(_: Uint8Array): void {}
+
+  closed(): boolean {
+    return false;
+  }
 }
 
 function sendChunk(handler: Function, c: Chunk): void {
@@ -48,5 +54,6 @@ function sendChunk(handler: Function, c: Chunk): void {
   const read = new ReadWire(ab);
   handler(0, read);
 }
+
 
 

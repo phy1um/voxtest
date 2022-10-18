@@ -6,7 +6,7 @@ export class ReadWire {
   constructor(buffer: ArrayBuffer) {
     this._stream = new Uint8Array(buffer); 
     this._head = 0;
-    console.log(this._stream);
+    // console.log(this._stream);
   }
 
   getU8() :number {
@@ -99,6 +99,9 @@ export class WriteWire {
     if (!Number.isInteger(x)) {
       console.error("!!!");
     }
+    while(this._head % 2 != 0) {
+      this._head += 1;
+    }
     this.putU8(x & 0xff);
     this.putU8((x & 0xff00) >> 8);
   }
@@ -107,6 +110,9 @@ export class WriteWire {
   putU32(x: number) {
     if (!Number.isInteger(x)) {
       console.error("!!!");
+    }
+    while(this._head % 4 != 0) {
+      this._head += 1;
     }
     this.putU8(x & 0xff);
     this.putU8((x & 0xff00) >> 8);

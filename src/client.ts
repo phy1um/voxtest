@@ -5,6 +5,8 @@ import {Name} from "./cmd";
 export interface ClientCon {
   addHandler(kind: number, fn: Function) : void; 
   requestChunk(xi: number, zi: number) : void;
+  send(req: Uint8Array) : void;
+  closed(): boolean;
 }
 
 export class WebsocketClientcon implements ClientCon {
@@ -52,7 +54,11 @@ export class WebsocketClientcon implements ClientCon {
   }
 
   send(req) {
-    console.log(`sending ${req}`);
+    // console.log(`sending ${req}`);
     this._ws.send(req);
+  }
+
+  closed(): boolean {
+    return (this._ws.readyState > 2)
   }
 }
