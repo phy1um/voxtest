@@ -235,7 +235,7 @@ export class World {
     }
     this.mgr.update(dt);
     if (this.focus) {
-      this._updateFocus();
+      this._updateFocusNet();
     }
   }
 
@@ -269,15 +269,15 @@ export class World {
     this.mgr.dead = true;
   }
 
-  _updateFocus() {
+  _updateFocusNet() {
     const w = new WriteWire(new Uint8Array(60));
     w.putU8(CMDs.EDESCRIBE);
     w.putU32(this.focusId);
     w.putU32(1);
     w.putU8(3);
-    w.putU32(Math.floor(this.focus.pos.x));
-    w.putU32(Math.floor(this.focus.pos.y));
-    w.putU32(Math.floor(this.focus.pos.z));
+    w.putFloat(this.focus.pos.x);
+    w.putFloat(this.focus.pos.y);
+    w.putFloat(this.focus.pos.z);
     this._client.send(w._stream);
   }
 

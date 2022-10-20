@@ -31,6 +31,9 @@ export class ReadWire {
   } 
 
   getFloat() : any {
+    while(this._head % 4 != 0) {
+      this._head += 1;
+    }
     const b0 = this.getU8();
     const b1 = this.getU8();
     const b2 = this.getU8();
@@ -120,5 +123,13 @@ export class WriteWire {
     this.putU8((x & 0xff000000) >> 24);
   }
 
+  putFloat(x: number) {
+    while(this._head % 4 != 0) {
+      this._head += 1;
+    }
+    const ind = this._head / 4;
+    new Float32Array(this._stream.buffer)[ind] = x;
+    this._head += 4;
+  }
 }
 
