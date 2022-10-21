@@ -85,23 +85,31 @@ export function main() {
   let lastTime: number = performance.now();;
   // const updateHud = makeHudTicker(myStats, renderer);
 
+  let fatal = false;
 
   function render(time: number) {
 
-    if (world._client.closed()) {
+    if (world._client.closed() || fatal) {
       return; 
     }
-    const dt = Math.min((time - lastTime) * 0.001, 0.3);
-    lastTime = time;
 
-    stats.begin();
-    renderer.render(world.scene, world.cam);
-    stats.end();
     requestAnimationFrame(render);
 
-    // hudTime.innerText = World.time.toString()
-    world.update(dt);
+    try {
+      const dt = Math.min((time - lastTime) * 0.001, 0.3);
+      lastTime = time;
 
+      stats.begin();
+      renderer.render(world.scene, world.cam);
+      stats.end();
+
+      // hudTime.innerText = World.time.toString()
+      world.update(dt);
+
+    } catch (e) {
+      console.error(e);
+      fatal = true;
+    }
     // updateHud();
   }
 

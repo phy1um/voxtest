@@ -93,6 +93,7 @@ export class WriteWire {
   putU8(x: number) {
     if (!Number.isInteger(x)) {
       console.error("!!!");
+      throw new Error("cannot put non-integer in wire as U8");
     }
     this._stream[this._head] = x & 0xff;
     this._head += 1;
@@ -101,6 +102,7 @@ export class WriteWire {
   putU16(x: number) {
     if (!Number.isInteger(x)) {
       console.error("!!!");
+      throw new Error("cannot put non-integer in wire as U16");
     }
     while(this._head % 2 != 0) {
       this._head += 1;
@@ -113,6 +115,7 @@ export class WriteWire {
   putU32(x: number) {
     if (!Number.isInteger(x)) {
       console.error("!!!");
+      throw new Error("cannot put non-integer in wire as U32");
     }
     while(this._head % 4 != 0) {
       this._head += 1;
