@@ -73,6 +73,7 @@ export class Terminal implements Entity, KeyHandler {
     if (this.bindAcc > BIND_TIMEOUT) {
       this.focusOffset.copy(this.position);
       this.focusOffset.add(FOCUS_OFFSET);
+      /*
       for (let e of w.entities as Array<Entity>) {
         if (e instanceof Player) {
           const player = e as Player;
@@ -82,6 +83,7 @@ export class Terminal implements Entity, KeyHandler {
           }
         }
       }
+      */
       this.bindAcc = 0;
     }
     this.mesh.position.copy(this.position);
