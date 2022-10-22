@@ -8,7 +8,7 @@ export interface ClientCon {
 }
 
 export class WSClient {
-  this._handlers = {};
+  this._handlers!: Object = {};
   this._isOpen = false;
   this._ws!: WebSocket;
   this._world!: World;
@@ -47,7 +47,7 @@ export class WSClient {
     this._ws.send(msg);
   }
 
-  _handle(event) {
+  _handle(e) {
     event.data.arrayBuffer().then((buf: ArrayBuffer) => {
       const wire = new ReadWire(buf);
       const cmd = wire.getU8();

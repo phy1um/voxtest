@@ -3,6 +3,7 @@ import { ClientCon } from "../client";
 import { CMDs } from "../cmd";
 import { ReadWire, WriteWire } from "../wire";
 import { basicPopulate, flatPopulate } from "./gen";
+import { World } from "../world";
 
 function makeKey(x: number, y: number, z: number) {
   return `${x},${z}`;
@@ -11,49 +12,26 @@ function makeKey(x: number, y: number, z: number) {
 
 export class OfflineClientCon implements ClientCon {
 
-  handlers!: any;
-  world: Object = {};
+  _world!: World
 
-  constructor() {
-    this.handlers = {};
-  }
-
-  addHandler(kind: any, fn: any) {
-    this.handlers[kind] = fn;
+  constructor(w: World) {
+    this._world = w;
   }
 
   requestChunk(xi: any, zi: any) {
-    const hc = this.handlers[CMDs.CHUNKDATA];
-    if (!hc) {
-      return;
-    }
-
     const key = makeKey(xi, 0, zi);
-    const cached = this.world[key];
+    const cached = this._world[key];
     if (cached !== undefined) {
-      sendChunk(hc, cached);
+      return;
     }
 
     const newChunk = new Chunk(xi, zi);
     flatPopulate(newChunk); 
-    this.world[key] = newChunk;
-    sendChunk(hc, newChunk);
+    this._world[key] = newChunk;
   }
 
-  send(_: Uint8Array): void {}
-
-  closed(): boolean {
+  finished(): boolean {
     return false;
   }
 }
-
-function sendChunk(handler: Function, c: Chunk): void {
-  const ab = new Uint8Array((CHUNK_DIM * CHUNK_DIM * CHUNK_DIM * 4) + 80);
-  const write = new WriteWire(ab);
-  ChunkToWire(c, write);
-  const read = new ReadWire(ab);
-  handler(0, read);
-}
-
-
 
