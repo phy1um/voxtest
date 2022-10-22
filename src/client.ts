@@ -3,44 +3,22 @@ import {ReadWire} from "./wire";
 import {Name} from "./cmd";
 
 export interface ClientCon {
-  addHandler(kind: number, fn: Function) : void; 
   requestChunk(xi: number, zi: number) : void;
-  send(req: Uint8Array) : void;
-  closed(): boolean;
+  finished(): boolean;
 }
 
-export class WebsocketClientcon implements ClientCon {
+export class WSClient {
+  this._handlers = {};
+  this._isOpen = false;
+  this._ws!: WebSocket;
+  this._world!: World;
 
-  _ws!: WebSocket; 
-  _handlers!: any;
-  _open: boolean;
-
-  constructor(ws: WebSocket) {
+  constructor(w: World, ws: WebSocket) {
+    this._world = w;
     this._ws = ws;
-    this._ws.addEventListener("open", e => this.onOpen(e))
-    this._ws.addEventListener("message", e => this.handleMessage(e))
-    this._handlers = {};
-    this._open = false;
-  }
-
-  onOpen(event) {
-    console.log("connected to server");
-  }
-
-  handleMessage(event) {
-    event.data.arrayBuffer().then((buf: ArrayBuffer) => {
-        const wire = new ReadWire(buf);
-        const cmd = wire.getU8();
-        if (cmd in this._handlers) {
-          this._handlers[cmd](this, wire);
-        } else {
-          console.log(`unknown command (${cmd}), (${Name(cmd)})`);
-        }
-      });
-  }
-
-  addHandler(kind, fn) {
-    this._handlers[kind] = fn;
+    this._ws.addEventListener("open", e => this._open(e))
+    this._ws.addEventListener("message", e => this._handle(e))
+    this._addHandler(CMDs.CHUNKDATA, (wire: ReadWire) => this._readChunkData(wire));
   }
 
   requestChunk(xi, zi) {
@@ -53,12 +31,34 @@ export class WebsocketClientcon implements ClientCon {
     this.send(req);
   }
 
-  send(req) {
-    // console.log(`sending ${req}`);
-    this._ws.send(req);
-  }
-
-  closed(): boolean {
+  finished(): boolean {
     return (this._ws.readyState > 2)
   }
+
+  _addHandler(cmd: number, fn: Function) {
+    this._handlers[cmd] = fn;
+  }
+
+  _open(ev: any) {
+    this._isOpen = true;
+  }
+  
+  _send(msg: Uint8Array) {
+    this._ws.send(msg);
+  }
+
+  _handle(event) {
+    event.data.arrayBuffer().then((buf: ArrayBuffer) => {
+      const wire = new ReadWire(buf);
+      const cmd = wire.getU8();
+      if (cmd in this._handlers) {
+        this._handlers[cmd](this, wire);
+      } else {
+        console.error(`unknown command (${cmd}), (${Name(cmd)})`);
+      }
+    });
+  }
+
+
 }
+
