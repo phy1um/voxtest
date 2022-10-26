@@ -1,12 +1,10 @@
 
 import {Player} from "./player";
 import {Manager} from "./manager";
-import {NewWorldForClient, World} from "./world";
-import {WebsocketClientcon} from "./client"; 
-
+import {WSClient} from "./client"; 
+import {World} from "./world";
 import { OfflineClientCon } from "./offline/client";
 
-import { Terminal } from "./game/terminal";
 
 import * as Stats from "stats.js";
 import * as THREE from "three";
@@ -39,9 +37,8 @@ let world: World;
 
 export function ConnectToServer(addr: string) {
   const con = new WebSocket(addr)
-  const client = new WebsocketClientcon(con);
-  world = NewWorldForClient(client, (world: World) => {
-  });
+  world = new World();
+  const client = new WSClient(world, con);
 }
 
 if (window.location.search && window.location.search.length > 1) {
@@ -50,21 +47,10 @@ if (window.location.search && window.location.search.length > 1) {
 
 
 if (!QUERY_SETTINGS.defaultServer) {
-  const off = new OfflineClientCon();
-    world = NewWorldForClient(off, (world: World) => {
-      //const player = new Player(4, 1.6, 4);
-      const player = new Player(4, 1.6, 1);
-      player.bindListeners();
-      world.spawn(player)
-      // player.bindCamera(camera);
-      world.bindPlayer(player);
-      const term = new Terminal();
-      term.mesh.scale.set(0.6, 0.6, 0.6);
-      term.position.set(4, 1.55, 3.3);
-      world.spawn(term);
-    });
-} else {
- ConnectToServer(QUERY_SETTINGS.defaultServer); 
+  world = new World();
+  const off = new OfflineClientCon(world);
+  } else {
+  ConnectToServer(QUERY_SETTINGS.defaultServer); 
 }
 
 
@@ -89,7 +75,7 @@ export function main() {
 
   function render(time: number) {
 
-    if (world._client.closed() || fatal) {
+    if (world._client.finished() || fatal) {
       return; 
     }
 

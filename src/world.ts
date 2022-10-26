@@ -1,4 +1,4 @@
-import {Chunk, CHUNK_DIM, ChunkFromWire} from "./chunk";
+import {Chunk, CHUNK_DIM} from "./chunk";
 import {ClientCon} from "./client"; 
 import {CMDs} from "./cmd";
 import * as THREE from "three";
@@ -6,17 +6,9 @@ import { Entity } from "./game/entity";
 import { Manager } from "./manager";
 import { Player } from "./player";
 import { ReadWire, WriteWire } from "./wire";
-import { NetDebugEntity } from "./game/net";
 
 function makeKey(x: number, y: number, z: number) {
   return `${x},${z}`;
-}
-
-class FakeAuther {
-  sendAuth(wire: WriteWire) {
-    wire.putU8(CMDs.AUTH);
-    wire.putU32(12345);
-  }
 }
 
 const DAY_CYCLE_MAX = 50;
@@ -41,11 +33,9 @@ export class World {
   mgr: Manager;
   focus: any;
   focusId: number;
-  auther: FakeAuther;
   cam: THREE.Camera;
 
   constructor(
-    authClient = new FakeAuther(),
     background = new THREE.Color(0x111111),
     ambient = new THREE.AmbientLight(0x404040), 
     sun = new THREE.DirectionalLight(0xd0d0d0, 0.4),
@@ -72,98 +62,23 @@ export class World {
     this.doDayNight = doDayNight;
 
     this.mgr = new Manager(this, 0, 0);
-    this.focus = undefined;
+    this.mgr.runTaskLoop(10);
 
-    this.auther = authClient;
+    this.focus = undefined;
 
     const ar = window.innerWidth / window.innerHeight;
     this.cam = new THREE.PerspectiveCamera(75, ar, 0.1, 1000);
 
+
+  }
+
+  bindPlayer(id: number, p: Player) {
+    this.focus = p;
+    this.focusId = id;
   }
 
   bindClient(c: ClientCon) {
     this._client = c;
-    this._client.addHandler(CMDs.CHUNKDATA, (c, wire) => this.chunkFromWire(wire));
-
-    this._client.addHandler(CMDs.CHALLENGE, (c, wire) => {
-      console.log("GOT CHALLENGE");
-      const send = new WriteWire(new Uint8Array(20));
-      this.auther.sendAuth(send);
-      this._client.send(send._stream);
-    });
-    this._client.addHandler(CMDs.CHALLENGE_STATUS, (c, wire: ReadWire) => {
-      const stat = wire.getU8();
-      console.log(`CHALLENGE STATUS: ${stat}`);
-      if (stat == 1) {
-        console.log("challenge pending...");
-        return;
-      } 
-      else if (stat == 2) {
-        console.error("challenge failed!");
-        return;
-      }
-      else if (stat != 3) {
-        console.error("unknown challenge status: " + stat);
-        return;
-      }
-
-      // stat == 3 => OK
-      const send = new WriteWire(new Uint8Array(5));
-      send.putU8(CMDs.CLIENT_SPAWN);
-      this._client.send(send._stream);
-    });
-
-    this._client.addHandler(CMDs.CLIENT_SPAWN, (c, wire: ReadWire) => {
-      const stat = wire.getU8();
-      if (stat == 0) {
-        console.error("failed to spawn client: server error");
-      }
-      const id = wire.getU32();
-      const flags = wire.getU32();
-      const kind = wire.getU8();
-      const posX = wire.getU32();
-      const posY = wire.getU32();
-      const posZ = wire.getU32();
-
-      console.log(`SPAWN PLAYER ${id} ${kind} @ ${posX} ${posY} ${posZ}`);
-      const player = new Player(posX, posY, posZ);
-      player.bindCamera(this.cam);
-      player.bindListeners();
-      player.bindWorld(this);
-      player.addToScene(this.scene);
-      this.entities[id] = player;
-
-      this.focus = player;
-      this.focusId = id;
-      
-    });
-
-    this._client.addHandler(CMDs.EDESCRIBE, (c: number, wire: ReadWire) => {
-      const eid = wire.getU32();
-      const flags = wire.getU32();
-      const dataFields = wire.getU8();
-      const data = new Uint32Array(dataFields);
-      for (let i = 0; i < dataFields; i++) {
-        data[i] = wire.getU32(); 
-      }
-      if (this.entities[eid] === undefined) {
-        console.log(`creating new net entity: ${eid}`);
-        const e = new NetDebugEntity();
-        this.entities[eid] = e;
-        e.addToScene(this.scene);
-      }
-      const e : Entity = this.entities[eid];
-      e.updateFromDescribe(flags, data);
-    });
-  }
-
-  bindPlayer(p: Player) {
-    this.focus = p;
-  }
-
-  chunkFromWire(w) {
-    const c = ChunkFromWire(w);
-    this.addChunk(c);
   }
 
   loadChunk(xi: number, zi: number) {
@@ -234,9 +149,9 @@ export class World {
       this.mgr.focusZ = this.focus.pos.z;
     }
     this.mgr.update(dt);
-    if (this.focus) {
-      this._updateFocusNet();
-    }
+
+    this._client.tick();
+
   }
 
   cleanup(x: number, z: number) {
@@ -269,25 +184,14 @@ export class World {
     this.mgr.dead = true;
   }
 
-  _updateFocusNet() {
-    const w = new WriteWire(new Uint8Array(60));
-    w.putU8(CMDs.EDESCRIBE);
-    w.putU32(this.focusId);
-    w.putU32(1);
-    w.putU8(3);
-    w.putFloat(this.focus.pos.x);
-    w.putFloat(this.focus.pos.y);
-    w.putFloat(this.focus.pos.z);
-    this._client.send(w._stream);
-  }
-
 }
 
+/*
 export function NewWorldForClient(c: ClientCon, onCreate: (w: World) => void): World {
   const w = new World();
-  w.bindClient(c);
   onCreate(w);
   w.mgr.runTaskLoop(10);
   return w;
 }
+*/
 
