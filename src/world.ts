@@ -100,6 +100,11 @@ export class World {
     this.scene.add(c.getMesh());
   }
 
+  getChunk(xi: number, zi: number) {
+    const key = makeKey(xi, 0, zi);
+    return this.chunks[key];
+  }
+
   chunkLoaded(xi: number, zi: number) {
     const key = makeKey(xi, 0, zi);
     return key in this.chunks;

@@ -79,7 +79,7 @@ export class WSClient {
       const wire = new ReadWire(buf);
       const cmd = wire.getU8();
       if (cmd in this._handlers) {
-        this._handlers[cmd](this, wire);
+        this._handlers[cmd](wire);
       } else {
         console.error(`unknown command (${cmd}), (${Name(cmd)})`);
       }

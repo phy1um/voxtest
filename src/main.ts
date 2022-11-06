@@ -1,20 +1,17 @@
 
-import {Player} from "./player";
-import {Manager} from "./manager";
 import {WSClient} from "./client"; 
 import {World} from "./world";
 import { OfflineClientCon } from "./offline/client";
+import { basicPopulate, flatPopulate } from "./offline/gen";
 
 
 import * as Stats from "stats.js";
 import * as THREE from "three";
 
 const stats = new Stats();
-// stats.showPanel(0);
-// document.body.appendChild(stats.dom);
+stats.showPanel(0);
+document.body.appendChild(stats.dom);
 
-
-const OFFLINE = true;
 
 /*
 function makeHudTicker(e: HTMLElement, r: THREE.WebGLRenderer) {
@@ -38,7 +35,7 @@ let world: World;
 export function ConnectToServer(addr: string) {
   const con = new WebSocket(addr)
   world = new World();
-  const client = new WSClient(world, con);
+  new WSClient(world, con);
 }
 
 if (window.location.search && window.location.search.length > 1) {
@@ -48,8 +45,8 @@ if (window.location.search && window.location.search.length > 1) {
 
 if (!QUERY_SETTINGS.defaultServer) {
   world = new World();
-  const off = new OfflineClientCon(world);
-  } else {
+  new OfflineClientCon(1, 4, world, basicPopulate);
+} else {
   ConnectToServer(QUERY_SETTINGS.defaultServer); 
 }
 
@@ -61,8 +58,6 @@ export function main() {
   renderer.setSize(window.innerWidth,window.innerHeight,false);
 
 
-  // connectToServer("ws://127.0.0.1:9991");
- 
   canvas.addEventListener("pointerdown", () => {
     console.log("click!");
     canvas.requestPointerLock();

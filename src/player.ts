@@ -73,7 +73,7 @@ export class Player implements Entity {
     this.camera.lookAt(fwd);
   }
 
-  tick(dt: number, _: any): void {
+  tick(dt: number, world: any): void {
 
     this.wishDir.set(0,0,0);
 
@@ -115,7 +115,7 @@ export class Player implements Entity {
       this.vspeed = 0;
       this.foot.copy(this.pos);
       this.foot.y += FOOTOFFSET;
-      if (this.world.pointFree(this.foot.x, this.foot.y, this.foot.z)) {
+      if (world.pointFree(this.foot.x, this.foot.y, this.foot.z)) {
         this.grounded = false;
       }
       if (this.keys[" "]) {
@@ -135,7 +135,7 @@ export class Player implements Entity {
     this.nextPos.copy(this.pos);
     this.nextPos.add(this.working);
 
-    if (this.boxFree(this.nextPos)) {
+    if (this.boxFree(world, this.nextPos)) {
       this.pos.copy(this.nextPos);
     } else {
       this.velocity.x = 0;
@@ -145,7 +145,7 @@ export class Player implements Entity {
     this.nextPos.copy(this.pos); 
     this.nextPos.y += this.vspeed*dt;
 
-    if (this.world.pointFree(this.nextPos.x, this.nextPos.y + FOOTOFFSET, this.nextPos.z)) {
+    if (world.pointFree(this.nextPos.x, this.nextPos.y + FOOTOFFSET, this.nextPos.z)) {
       this.pos.copy(this.nextPos);
     } else {
       this.vspeed = 0;
@@ -231,16 +231,16 @@ export class Player implements Entity {
     this.world = world;
   }
 
-  boxFree(v) {
-    return this.world.pointFree(v.x - 0.5, v.y, v.z - 0.5)
-      && this.world.pointFree(v.x + 0.5, v.y, v.z - 0.5)
-      && this.world.pointFree(v.x - 0.5, v.y, v.z + 0.5)
-      && this.world.pointFree(v.x + 0.5, v.y, v.z + 0.5);
+  boxFree(world, v) {
+    return world.pointFree(v.x - 0.5, v.y, v.z - 0.5)
+      && world.pointFree(v.x + 0.5, v.y, v.z - 0.5)
+      && world.pointFree(v.x - 0.5, v.y, v.z + 0.5)
+      && world.pointFree(v.x + 0.5, v.y, v.z + 0.5);
   }
 
 
   updateFromDescribe(flags: any, data: Uint32Array): void {
-    
+
   }
   
 }

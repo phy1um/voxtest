@@ -2,10 +2,10 @@ import { Chunk, ChunkToWire, CHUNK_DIM } from "../chunk";
 import { ClientCon } from "../client";
 import { CMDs } from "../cmd";
 import { ReadWire, WriteWire } from "../wire";
-import { basicPopulate, flatPopulate } from "./gen";
 import { World } from "../world";
 import { Terminal } from "../game/terminal";
 import { Player } from "../player";
+import { Entity } from "../game/entity";
 
 function makeKey(x: number, y: number, z: number) {
   return `${x},${z}`;
@@ -15,19 +15,43 @@ function makeKey(x: number, y: number, z: number) {
 export class OfflineClientCon implements ClientCon {
 
   _world!: World
+  _genChunk!: (_: Chunk) => void;
 
-  constructor(w: World) {
+  constructor(px: number, py: number, w: World, gen: (_: Chunk) => void) {
     this._world = w;
-    const player = new Player(4, 1.6, 1);
+    this._world.bindClient(this);
+
+    this._genChunk = gen;
+
+    const player = new Player(px, 1.6, py);
+    const cxi = Math.floor(px / CHUNK_DIM);
+    const cyi = Math.floor(py / CHUNK_DIM);
+    this.requestChunk(cxi, cyi);
+
+    const localX = px % CHUNK_DIM;
+    const localY = py % CHUNK_DIM;
+
+    const cc: Chunk = this._world.getChunk(cxi, cyi);
+    for (let yy = 50; yy >= 0; yy--) {
+      if (cc.get(localX, yy, localY) != 0) {
+        player.pos.setY(yy + 3);
+        break;
+      }
+    }
+
+    const id = -1;
+    player.bindCamera(this._world.cam);
     player.bindListeners();
-    this._world.spawn(player)
-    this._world.bindPlayer(-1, player);
+    player.bindWorld(this._world);
+    player.addToScene(this._world.scene);
+    this._world.entities[id] = player;
+    this._world.bindPlayer(id, player);
+
     const term = new Terminal();
     term.mesh.scale.set(0.6, 0.6, 0.6);
     term.position.set(4, 1.55, 3.3);
     this._world.spawn(term);
 
-    this._world.bindClient(this);
   }
 
   requestChunk(xi: any, zi: any) {
@@ -38,8 +62,8 @@ export class OfflineClientCon implements ClientCon {
     }
 
     const newChunk = new Chunk(xi, zi);
-    flatPopulate(newChunk); 
-    this._world[key] = newChunk;
+    this._genChunk(newChunk); 
+    this._world.addChunk(newChunk);
   }
 
   finished(): boolean {
@@ -47,6 +71,24 @@ export class OfflineClientCon implements ClientCon {
   }
 
   tick() : void {
+  }
+
+  _placeEntityOnGround(e: Entity, x: number, y: number) {
+    const cxi = Math.floor(x / CHUNK_DIM);
+    const cyi = Math.floor(y / CHUNK_DIM);
+    this.requestChunk(cxi, cyi);
+
+    const localX = x % CHUNK_DIM;
+    const localY = y % CHUNK_DIM;
+
+    const cc: Chunk = this._world.getChunk(cxi, cyi);
+    for (let yy = 50; yy >= 0; yy--) {
+      if (cc.get(localX, yy, localY) != 0) {
+        break;
+      }
+    }
+
+
   }
 }
 
